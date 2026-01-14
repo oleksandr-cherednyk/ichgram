@@ -1,16 +1,20 @@
 # ICHgram Project Plan
 
 ## Executive summary
+
 ICHgram is an Instagram-like, full-stack web app built from a provided Figma design. The plan emphasizes a reliable auth model, media handling, and real-time chat while keeping UX parity with the design. The tech stack choices prioritize maintainability, rapid iteration, and portfolio-grade practices (testing, CI, clear architecture).
 
 ## Project description
+
 - Name: ICHgram
 - Type: Instagram-like full-stack web app built from a provided Figma design
 - Primary UI requirements: AppShell with left Sidebar + main content, pages (Home feed grid, Explore grid, Profile, Messages), overlays (Search panel, Notifications panel), auth pages (Login, Sign up, Reset password)
 - Core features: auth (register/login/logout/refresh/me), posts CRUD + image upload + post modal view + feed/explore grids, likes (optimistic), comments (pagination), profile by username + edit + avatar upload, search overlay (Users + Tags, debounced), hashtags (extract/normalize + search + /tags/:tag page), notifications overlay (like/comment events; follow optional), chat (REST history + Socket.io realtime, optimistic send, virtualization)
 
 ## Deliverables
+
 ### MVP definition
+
 - Auth flow complete (register/login/logout/refresh/me) with httpOnly refresh cookie
 - Core AppShell + required pages/overlays from Figma
 - Posts CRUD with image upload + post modal + feed/explore grids
@@ -21,16 +25,19 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
 - Chat with REST history, realtime updates, optimistic send, and message list virtualization
 
 ### Portfolio-ready definition
+
 - MVP plus: polished error handling, stable caching/invalidation, basic tests for auth/posts/chat, CI pipeline, documented architecture/security/performance, and consistent UX details (loading/empty/error states)
 
 ---
 
 ## Roadmap (11 phases)
 
-### Phase 1 — Foundations and documentation
+### Phase 0 — Foundations and documentation
+
 **Goal:** Establish project structure, docs baseline, and tooling expectations.
 
 **Tasks**
+
 - Create documentation set and link from README
   - [ ] Draft plan, architecture, security, performance, API overview
   - [ ] Add Documentation section in README
@@ -48,6 +55,7 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Decide smoke vs integration coverage
 
 **Definition of Done (DoD)**
+
 - Docs created and referenced from README
 - Error format and env var inventory documented
 - Test strategy written at high level
@@ -56,10 +64,12 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
 
 ---
 
-### Phase 2 — Backend scaffolding and data foundations
+### Phase 1 — Backend scaffolding and data foundations
+
 **Goal:** Create backend structure and data models baseline.
 
 **Tasks**
+
 - Initialize server folder structure (/apps/server with routes/controllers/services/models/middlewares)
   - [ ] Create folders and barrel exports
   - [ ] Add base config files
@@ -77,17 +87,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Response metadata standard
 
 **DoD**
+
 - Folder layout and model list established
 - Validation and pagination approach documented
 
-**Dependencies:** Phase 1
+**Dependencies:** Phase 0
 
 ---
 
-### Phase 3 — Auth, session, and security baseline
+### Phase 2 — Auth, session, and security baseline
+
 **Goal:** Implement the authentication model and base security controls.
 
 **Tasks**
+
 - Build auth endpoints (register/login/logout/refresh/me)
   - [ ] Request/response schemas
   - [ ] Access token TTL + refresh cookie
@@ -105,18 +118,21 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Reset token flow placeholder (UI only)
 
 **DoD**
+
 - Auth flow end-to-end with refresh cookies
 - Rate limiting + CORS configured
 - Auth middleware documented
 
-**Dependencies:** Phase 2
+**Dependencies:** Phase 1
 
 ---
 
-### Phase 4 — Media pipeline and post CRUD
+### Phase 3 — Media pipeline and post CRUD
+
 **Goal:** Enable image uploads and CRUD operations for posts.
 
 **Tasks**
+
 - Implement upload pipeline (multer + sharp)
   - [ ] Size/type whitelist
   - [ ] Normalize output sizes/formats
@@ -133,19 +149,22 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Local dev path or storage abstraction
 
 **DoD**
+
 - Posts CRUD works with image processing
 - Feed/explore endpoints paginated
 
-**Dependencies:** Phase 3
+**Dependencies:** Phase 2
 
 ---
 
-### Phase 5 — Hashtags and tag discovery
+### Phase 4 — Hashtags and tag discovery
+
 **Goal:** Implement hashtag extraction and tag-based discovery.
 
 **Tasks**
+
 - Extract hashtags from captions on backend
-  - [ ] Normalize: lowercase, letters/digits/_
+  - [ ] Normalize: lowercase, letters/digits/\_
   - [ ] De-duplicate, max 10
 - Persist hashtags in Post.hashtags[] with index
   - [ ] Multikey index on hashtags
@@ -161,17 +180,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Edge case notes
 
 **DoD**
+
 - Hashtags extracted, indexed, searchable
 - Tag page endpoint available
 
-**Dependencies:** Phase 4
+**Dependencies:** Phase 3
 
 ---
 
-### Phase 6 — Likes, comments, and notifications core
+### Phase 5 — Likes, comments, and notifications core
+
 **Goal:** Deliver interaction mechanics with pagination and notifications hooks.
 
 **Tasks**
+
 - Implement likes endpoints
   - [ ] Like/unlike with unique index
   - [ ] Idempotent responses
@@ -189,17 +211,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Consistent response shape
 
 **DoD**
+
 - Likes and comments working with pagination
 - Notifications for like/comment supported
 
-**Dependencies:** Phase 5
+**Dependencies:** Phase 4
 
 ---
 
-### Phase 7 — Search and profile features
+### Phase 6 — Search and profile features
+
 **Goal:** Enable user discovery and profile management.
 
 **Tasks**
+
 - User search endpoint for overlay
   - [ ] Debounced query support
   - [ ] Basic pagination
@@ -217,17 +242,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Empty state guidance
 
 **DoD**
+
 - Search overlay endpoints for users/tags
 - Profile view/edit + avatar upload
 
-**Dependencies:** Phase 6
+**Dependencies:** Phase 5
 
 ---
 
-### Phase 8 — Chat and realtime socket layer
+### Phase 7 — Chat and realtime socket layer
+
 **Goal:** Deliver chat REST history and real-time messaging via Socket.io.
 
 **Tasks**
+
 - Create conversation and message models
   - [ ] Participant list enforced
   - [ ] Index on conversationId + createdAt
@@ -245,17 +273,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Error handling expectations
 
 **DoD**
+
 - Chat REST + Socket.io working
 - Authorization and validation enforced
 
-**Dependencies:** Phase 7
+**Dependencies:** Phase 6
 
 ---
 
-### Phase 9 — Frontend shell and shared UI
+### Phase 8 — Frontend shell and shared UI
+
 **Goal:** Build the overall UI skeleton and shared components.
 
 **Tasks**
+
 - Implement AppShell layout from Figma
   - [ ] Left sidebar + main content
   - [ ] Responsive layout rules
@@ -273,17 +304,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Toast/inline error patterns
 
 **DoD**
+
 - AppShell and routes render from skeleton
 - Shared UI and state layers ready
 
-**Dependencies:** Phase 8
+**Dependencies:** Phase 7
 
 ---
 
-### Phase 10 — Feature pages and overlays
+### Phase 9 — Feature pages and overlays
+
 **Goal:** Implement page-level UI and wire to APIs.
 
 **Tasks**
+
 - Home feed + post modal
   - [ ] Feed grid with pagination
   - [ ] Modal post view with comments
@@ -301,17 +335,20 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Chat view with react-virtuoso
 
 **DoD**
+
 - All required pages/overlays wired to APIs
 - Loading/empty/error states present
 
-**Dependencies:** Phase 9
+**Dependencies:** Phase 8
 
 ---
 
-### Phase 11 — Quality, performance, and CI
+### Phase 10 — Quality, performance, and CI
+
 **Goal:** Stabilize performance, add tests, and document CI.
 
 **Tasks**
+
 - Add critical API tests (auth/posts/chat)
   - [ ] Supertest suites
   - [ ] Seed data strategy
@@ -329,15 +366,17 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
   - [ ] Retry patterns for queries
 
 **DoD**
+
 - Tests green for critical flows
 - Performance requirements documented and met
 - CI pipeline defined
 
-**Dependencies:** Phase 10
+**Dependencies:** Phase 9
 
 ---
 
 ## Scope cuts (time-savers)
+
 - Follow/following system (optional)
 - Typing indicators and read receipts in chat
 - Trending tags or tag analytics
@@ -345,6 +384,7 @@ ICHgram is an Instagram-like, full-stack web app built from a provided Figma des
 - Recent search history (client-only)
 
 ## Suggested PR strategy
+
 - One issue per PR, named `feature/<issue-title>` or `fix/<issue-title>`
 - Keep PRs under ~300 lines when possible; split large tasks
 - Require a short checklist in each PR description (what/why/test)
