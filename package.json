@@ -16,6 +16,20 @@
     "format:client": "pnpm --filter ./apps/client format",
     "format:server": "pnpm --filter ./apps/server format",
     "test:client": "pnpm --filter ./apps/client test",
-    "test:server": "pnpm --filter ./apps/server test"
+    "test:server": "pnpm --filter ./apps/server test",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4"
   }
 }
