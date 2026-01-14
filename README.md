@@ -4,20 +4,24 @@ ICHgram is a full-stack social media app inspired by Instagram.
 It includes authentication, posts feed, likes/comments, user profiles, search, notifications and real-time chat.
 
 ## Demo
+
 - Live demo: _(add link)_
 - Figma screens: _(add link or screenshots folder)_
 
 ## Screenshots
+
 > Add screenshots here (feed, profile, post modal, create post, messages, notifications panel, search panel)
 
 ## Features
 
 ### Authentication
+
 - Sign up / Log in / Log out
 - Refresh session (access + refresh tokens)
 - Password reset UI (optional)
 
 ### Posts
+
 - Feed page (grid layout inspired by Instagram)
 - Explore page (media grid)
 - Create post (image upload + caption)
@@ -25,27 +29,32 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 - Post modal view
 
 ### Social actions
+
 - Like / Unlike (optimistic updates)
 - Comments (pagination)
 - Follow / Unfollow (optional)
 
 ### Search
+
 - Slide-in Search panel
 - User search by username/full name
 - Recent search history (client-side)
 
 ### Notifications
+
 - Slide-in Notifications panel
 - Events: likes, comments, follows
 - Read / unread state (optional)
 
 ### Messages (Real-time)
+
 - Conversations list
 - Chat history (pagination)
 - Real-time messaging via Socket.io
 - Optimistic send + delivery acknowledgement
 
 ## Documentation
+
 - docs/PLAN.md
 - docs/ARCHITECTURE.md
 - docs/SECURITY.md
@@ -57,6 +66,7 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 ## Tech Stack
 
 ### Frontend
+
 - React + TypeScript
 - Vite
 - Tailwind CSS
@@ -69,6 +79,7 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 - dayjs (date/time formatting)
 
 ### Backend
+
 - Node.js + TypeScript
 - Express
 - MongoDB + Mongoose
@@ -80,6 +91,7 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 - helmet, cors, express-rate-limit
 
 ### Dev / Quality
+
 - ESLint + Prettier
 - Husky + lint-staged
 - Vitest
@@ -91,17 +103,19 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 ## Architecture Overview
 
 ### Project Structure
+
 apps/
 client/ # React client
 server/ # Express server
 
-
 ### State management
+
 - **Server-state (API data):** TanStack Query
 - **UI state (overlays/modals):** Zustand
 - This keeps the app predictable and avoids storing API caches in Redux manually.
 
 ### Real-time chat
+
 - **REST API** for initial message history + pagination
 - **Socket.io** for real-time updates (new messages, typing, etc.)
 - MongoDB is the source of truth (no message loss on refresh)
@@ -109,6 +123,7 @@ server/ # Express server
 ---
 
 ## Security Decisions
+
 - Refresh token stored in **httpOnly cookie** (prevents JS token theft via XSS)
 - Short-lived access token
 - Strict CORS policy
@@ -119,6 +134,7 @@ server/ # Express server
 ---
 
 ## Performance Decisions
+
 - Pagination/cursor-based loading for feed, comments and messages
 - MongoDB indexes on:
   - posts (createdAt, authorId)
@@ -133,11 +149,13 @@ server/ # Express server
 ## Getting Started
 
 ### Requirements
+
 - Node.js >= 20
-- pnpm >= 9 (or npm)
+- pnpm >= 10
 - MongoDB (local or Docker)
 
 ### Environment variables
+
 Create env files based on templates:
 
 **apps/server/.env**
@@ -147,9 +165,20 @@ JWT_ACCESS_SECRET=...
 JWT_REFRESH_SECRET=...
 CLIENT_ORIGIN=localhost:5000
 
-
 **apps/client/.env**
 VITE_API_URL=http://localhost:4000
 
-
 ### Install
+
+pnpm install
+
+### Run
+
+From the repo root:
+
+- `pnpm dev` (client + server)
+- `pnpm dev:client`
+- `pnpm dev:server`
+
+If native deps were skipped, run:
+`pnpm approve-builds`
