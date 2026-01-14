@@ -1,0 +1,21 @@
+{
+  "name": "ichgram",
+  "private": true,
+  "workspaces": [
+    "apps/client",
+    "apps/server"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --filter ./apps/client --filter ./apps/server dev",
+    "dev:client": "pnpm --filter ./apps/client dev",
+    "dev:server": "pnpm --filter ./apps/server dev",
+    "build:client": "pnpm --filter ./apps/client build",
+    "build:server": "pnpm --filter ./apps/server build",
+    "lint:client": "pnpm --filter ./apps/client lint",
+    "lint:server": "pnpm --filter ./apps/server lint",
+    "format:client": "pnpm --filter ./apps/client format",
+    "format:server": "pnpm --filter ./apps/server format",
+    "test:client": "pnpm --filter ./apps/client test",
+    "test:server": "pnpm --filter ./apps/server test"
+  }
+}
