@@ -15,11 +15,22 @@
 - [x] Добавлены пустые entrypoints для клиента и сервера
 - [x] Добавлен минимальный ESLint flat-config для pre-commit
 
-## Фаза 1 — Backend scaffolding и модели (не начата)
+## Фаза 1 — Backend scaffolding и модели
 
-- [ ] Структура слоев /apps/server/src (routes/controllers/services/models/middlewares)
-- [ ] Базовый конфиг подключения MongoDB (без реализации логики)
-- [ ] Черновые схемы данных и индексы в документации
+Статус: закрыта
+
+- [x] Зафиксировать структуру слоев /apps/server/src (routes/controllers/services/models/middlewares)
+- [x] Определить модели данных и индексы (User/Post/Comment/Like/Notification/Conversation/Message/Follow)
+  - User, Post, Comment, Like, Notification, Conversation, Message, Follow (согласовано)
+- [x] Согласовать контракт пагинации (cursor + metadata)
+  - Cursor: opaque (createdAt + \_id), sort createdAt desc + \_id desc
+  - Response: data, nextCursor, hasMore; limit default 20, max 50
+- [x] Согласовать стандарт ошибок API (единый JSON‑формат)
+  - Формат: { error: { code, message, details?, requestId? } }
+- [x] Определить env vars сервера и поведение dev/prod (CORS, cookie flags, JWT TTL)
+  - Env: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL=15m, REFRESH_TOKEN_TTL=7d, NODE_ENV
+  - Cookies: dev httpOnly/lax/secure=false; prod httpOnly/none/secure=true
+  - CORS: origin=CLIENT_ORIGIN, credentials=true (глобально)
 
 ## Решения
 
