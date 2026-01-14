@@ -13,6 +13,8 @@
 - [x] Созданы .editorconfig и обновлен README под pnpm
 - [x] Сформирован pnpm-lock.yaml
 - [x] Выполнено approve-builds для нативных зависимостей (bcrypt/esbuild/sharp)
+- [x] Добавлены пустые entrypoints для клиента и сервера
+- [x] Добавлен минимальный ESLint flat-config для pre-commit
 
 ## Решения
 
