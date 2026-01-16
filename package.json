@@ -33,6 +33,7 @@
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "@typescript-eslint/parser": "^8.43.1"
   }
 }
