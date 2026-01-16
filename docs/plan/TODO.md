@@ -34,6 +34,10 @@
   - Cookies: dev httpOnly/lax/secure=false; prod httpOnly/none/secure=true
   - CORS: origin=CLIENT_ORIGIN, credentials=true (глобально)
 
+## Фаза 2 — Auth, сессии и безопасность
+
+- [ ] Детальный план в docs/plan/PHASE_2_DETAIL.md
+
 ## Решения
 
 - Структура проекта: /apps/client и /apps/server
