@@ -11,6 +11,12 @@ ICHgram — Instagram-подобное полнофункциональное в
 - Основные требования UI: AppShell с левым сайдбаром и основной областью, страницы (Home с сеткой фида, Explore с медиасеткой, Profile, Messages), оверлеи (Search panel, Notifications panel), страницы аутентификации (Login, Sign up, Reset password)
 - Ключевые функции: auth (register/login/logout/refresh/me), посты CRUD + загрузка изображений + модальное окно поста + сетки фида/эксплора, лайки (optimistic), комментарии (пагинация), профиль по username + редактирование + загрузка аватара, поиск в оверлее (Users + Tags, с дебаунсом), хэштеги (извлечение/нормализация + поиск + страница /tags/:tag), уведомления (like/comment; follow — опционально), чат (REST‑история + Socket.io realtime, optimistic send, виртуализация)
 
+## Технические решения
+
+- Репозиторий: `/apps/client` (React + Vite + TS), `/apps/server` (Express + TS + MongoDB/Mongoose), `/docs` (архитектура/контракты/решения)
+- Управление состоянием: server‑state через TanStack Query, UI/client‑state для оверлеев/модалок через Zustand; Redux не используется
+- Контракты API: единый формат ошибок, единая пагинация (opaque cursor), строгие правила CORS/cookies
+
 ## Deliverables
 
 ### Определение MVP
@@ -41,15 +47,21 @@ ICHgram — Instagram-подобное полнофункциональное в
 - Создать набор документации и добавить ссылку в README
   - [ ] Составить план, архитектуру, безопасность, производительность, API overview
   - [ ] Добавить раздел Documentation в README
-- Определить переменные окружения и список секретов
-  - [ ] Перечень env vars для клиента/сервера
-  - [ ] Отличия dev/prod (cookie flags, CORS origins)
-- Подтвердить структуру репозитория (/apps/client, /apps/server)
+- Подтвердить структуру репозитория
+  - [ ] Использовать `/apps/client`, `/apps/server`, `/docs` в документации и ссылках
   - [ ] Описать границы ответственности папок
   - [ ] Отметить подход к типам (локально в клиенте)
+- Описать root‑скрипты оркестрации
+  - [ ] В корневом `package.json` есть команды: dev, dev:client, dev:server, lint, format, format:check, test, build
+  - [ ] Скрипты делегируют выполнение в `/apps/client` и `/apps/server`
+- Определить переменные окружения и список секретов
+  - [ ] Перечень env vars для сервера: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL (default 15m), REFRESH_TOKEN_TTL (default 7d), NODE_ENV
+  - [ ] Зафиксировать dev/prod различия для cookies и CORS
+  - [ ] Отметить, что запросы клиента, требующие cookies, отправляются с `credentials` включенными
 - Зафиксировать контракт формата ошибок
-  - [ ] Определить JSON‑формат ошибки
-  - [ ] Документировать основные error codes
+  - [ ] Единый JSON‑формат ошибки:
+    - { error: { code, message, details?, requestId? } }
+  - [ ] Базовые коды: VALIDATION_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR
 - Описать стратегию тестирования
   - [ ] Выделить критические пользовательские потоки
   - [ ] Определить уровень покрытий
@@ -57,7 +69,8 @@ ICHgram — Instagram-подобное полнофункциональное в
 **Definition of Done (DoD)**
 
 - Документация создана и связана с README
-- Контракт ошибок и env vars описаны
+- Контракты ошибок и env vars описаны
+- Root‑скрипты оркестрации зафиксированы
 - Стратегия тестов сформулирована
 
 **Dependencies:** нет
@@ -70,21 +83,24 @@ ICHgram — Instagram-подобное полнофункциональное в
 
 **Tasks**
 
-- Инициализировать структуру /apps/server (routes/controllers/services/models/middlewares)
+- Инициализировать структуру `/apps/server` (routes/controllers/services/models/middlewares)
   - [ ] Создать папки и экспортные индексы
   - [ ] Добавить базовые конфиги
 - Настроить подключение MongoDB и конфиг
   - [ ] Централизовать соединение
   - [ ] Добавить graceful shutdown
-- Определить базовые модели: User, Post, Comment, Like
+- Определить базовые модели: User, Post, Comment, Like, Notification, Conversation, Message, Follow
   - [ ] Поля и индексы отмечены в docs
   - [ ] Правила владения объектами
 - Подготовить слой валидаций (Zod)
   - [ ] Валидаторы по доменам
   - [ ] Единый middleware валидации
-- Определить контракт пагинации
-  - [ ] Формат курсора и размер страницы
-  - [ ] Единый формат метаданных
+- Определить контракт пагинации (opaque cursor)
+  - [ ] Клиент не парсит курсор, только пересылает
+  - [ ] Запрос: `?cursor=<opaque>&limit=20`
+  - [ ] Ответ: `{ data: [], nextCursor: "...", hasMore: true }`
+  - [ ] Сортировка: createdAt desc, затем \_id desc
+  - [ ] hasMore определяется через `limit + 1`
 
 **DoD**
 
@@ -105,8 +121,10 @@ ICHgram — Instagram-подобное полнофункциональное в
   - [ ] Схемы request/response
   - [ ] TTL access token + refresh cookie
 - Настроить строгий CORS + cookies
-  - [ ] Разрешить только клиентский origin
-  - [ ] Включить credentials где нужно
+  - [ ] Cookie flags: dev httpOnly=true, sameSite=lax, secure=false
+  - [ ] Cookie flags: prod httpOnly=true, sameSite=none, secure=true
+  - [ ] CORS: origin=CLIENT_ORIGIN, credentials=true (глобально для API)
+  - [ ] Клиентские запросы с cookies отправляются с `credentials`
 - Добавить rate limit для auth
   - [ ] Ограничить register/login/refresh
   - [ ] Задокументировать пороги
@@ -139,9 +157,9 @@ ICHgram — Instagram-подобное полнофункциональное в
 - Создать endpoints для постов (create/read/update/delete)
   - [ ] Проверка владения для edit/delete
   - [ ] Поддержка получения поста для модалки
-- Реализовать feed/explore endpoints с пагинацией
-  - [ ] Cursor‑based списки
-  - [ ] Сортировка по createdAt
+- Реализовать feed/explore endpoints с пагинацией по стандарту opaque cursor
+  - [ ] Cursor‑based списки по контракту
+  - [ ] Сортировка по createdAt desc + \_id desc
 - Добавить метаданные поста для UI
   - [ ] Краткие данные автора, счетчики
   - [ ] Временные метки
@@ -151,7 +169,7 @@ ICHgram — Instagram-подобное полнофункциональное в
 **DoD**
 
 - CRUD постов работает с обработкой изображений
-- Feed/Explore paginated endpoints готовы
+- Feed/Explore endpoints соответствуют контракту пагинации
 
 **Dependencies:** Фаза 2
 
@@ -169,10 +187,10 @@ ICHgram — Instagram-подобное полнофункциональное в
 - Хранение в Post.hashtags[] с индексом
   - [ ] Multikey индекс на hashtags
   - [ ] Подтверждение в схеме
-- Endpoint поиска тегов для overlay
+- Endpoint поиска тегов для overlay (opaque cursor)
   - [ ] Поиск по частичному совпадению
   - [ ] Возврат счетчиков
-- Endpoint страницы тега /tags/:tag с пагинацией
+- Endpoint страницы тега /tags/:tag с пагинацией (opaque cursor)
   - [ ] Посты по тегу с курсором
   - [ ] Возвращать total count
 - Обновить API docs правилами хэштегов
@@ -197,12 +215,13 @@ ICHgram — Instagram-подобное полнофункциональное в
 - Реализовать endpoints лайков
   - [ ] Like/unlike с уникальным индексом
   - [ ] Idempotent ответы
-- Реализовать endpoints комментариев с пагинацией
+- Реализовать endpoints комментариев с пагинацией (opaque cursor)
   - [ ] Создание/удаление комментария
-  - [ ] Cursor pagination
+  - [ ] Cursor pagination по стандарту
 - Создать модель и endpoints уведомлений
   - [ ] Уведомления о лайках/комментариях
   - [ ] Read/unread (опционально)
+  - [ ] Лента уведомлений с opaque cursor
 - Соблюсти правила авторизации
   - [ ] Только владелец может удалять свой контент
   - [ ] Уведомления доступны владельцу
@@ -225,12 +244,12 @@ ICHgram — Instagram-подобное полнофункциональное в
 
 **Tasks**
 
-- Endpoint поиска пользователей для overlay
+- Endpoint поиска пользователей для overlay (opaque cursor)
   - [ ] Поддержка дебаунса
-  - [ ] Базовая пагинация
+  - [ ] Пагинация по контракту
 - Просмотр профиля по username
   - [ ] Публичные данные профиля
-  - [ ] Список постов с пагинацией
+  - [ ] Список постов с пагинацией (opaque cursor)
 - Редактирование профиля и загрузка аватара
   - [ ] Обновление имени/био
   - [ ] Загрузка аватара через медиа‑пайплайн
@@ -260,11 +279,12 @@ ICHgram — Instagram-подобное полнофункциональное в
   - [ ] Список участников
   - [ ] Индекс conversationId + createdAt
 - Реализовать REST endpoints чата
-  - [ ] Список диалогов
-  - [ ] Cursor pagination сообщений
+  - [ ] Список диалогов с opaque cursor
+  - [ ] Cursor pagination сообщений по стандарту
 - Реализовать Socket.io события
   - [ ] Send/receive message
   - [ ] Payload для delivery ack
+  - [ ] Room‑стратегия: join по conversationId и/или userId с проверкой авторизации
 - Соблюсти авторизацию чата
   - [ ] Только участники читают/пишут
   - [ ] Валидация payload через Zod
@@ -294,14 +314,14 @@ ICHgram — Instagram-подобное полнофункциональное в
   - [ ] Pages: Home, Explore, Profile, Messages
   - [ ] Auth: Login, Sign up, Reset password
 - Настроить слои состояния
-  - [ ] React Query client + defaults
-  - [ ] Zustand store для оверлеев/модалок
+  - [ ] React Query client + defaults для server‑state
+  - [ ] Zustand store для оверлеев/модалок (Redux не используем)
 - Создать shared UI примитивы
   - [ ] Buttons, inputs, modal panel, cards
   - [ ] Skeleton/loading состояния
 - Добавить базовый API клиент и обработку ошибок
   - [ ] Парсинг стандартного error shape
-  - [ ] Toast/inline паттерны
+  - [ ] Маппинг кодов ошибок на UI состояния
 
 **DoD**
 
@@ -319,10 +339,10 @@ ICHgram — Instagram-подобное полнофункциональное в
 **Tasks**
 
 - Home feed + post modal
-  - [ ] Сетка фида с пагинацией
+  - [ ] Сетка фида с пагинацией (opaque cursor)
   - [ ] Модалка поста с комментариями
 - Explore grid + tag page
-  - [ ] Explore infinite scroll
+  - [ ] Explore infinite scroll по контракту
   - [ ] /tags/:tag grid с пагинацией
 - Search overlay и Notifications overlay
   - [ ] Debounced search users/tags
@@ -331,7 +351,7 @@ ICHgram — Instagram-подобное полнофункциональное в
   - [ ] Просмотр по username
   - [ ] Редактирование профиля + аватар
 - Messages page
-  - [ ] Список диалогов
+  - [ ] Список диалогов с opaque cursor
   - [ ] Чат с react-virtuoso
 
 **DoD**
