@@ -1,11 +1,24 @@
-import { connectToDatabase, env, registerGracefulShutdown } from './config';
+import http from 'http';
 
-// Bootstraps core infrastructure until the HTTP server is added.
+import { connectToDatabase, env, registerGracefulShutdown } from './config';
+import { createApp } from './app';
+
+// Bootstraps core infrastructure before mounting feature routes.
 const bootstrap = async (): Promise<void> => {
   await connectToDatabase();
   registerGracefulShutdown();
 
-  console.log(`Database connected. Server placeholder on port ${env.PORT}.`);
+  const app = createApp();
+
+  app.get('/health', (_request, response) => {
+    response.json({ status: 'ok' });
+  });
+
+  const server = http.createServer(app);
+
+  server.listen(env.PORT, () => {
+    console.log(`Server listening on port ${env.PORT}.`);
+  });
 };
 
 bootstrap().catch((error) => {
