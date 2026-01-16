@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Core user profile and auth-related fields.
 const userSchema = new Schema(
   {
     email: {

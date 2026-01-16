@@ -19,6 +19,8 @@
 
 Статус: закрыта
 
+- [x] Реализован кодовый каркас (папки, конфиги, модели, пагинация, ошибки)
+
 - [x] Зафиксировать структуру слоев /apps/server/src (routes/controllers/services/models/middlewares)
 - [x] Определить модели данных и индексы (User/Post/Comment/Like/Notification/Conversation/Message/Follow)
   - User, Post, Comment, Like, Notification, Conversation, Message, Follow (согласовано)

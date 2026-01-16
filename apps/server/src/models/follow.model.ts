@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Follow relation between two users.
 const followSchema = new Schema(
   {
     followerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },

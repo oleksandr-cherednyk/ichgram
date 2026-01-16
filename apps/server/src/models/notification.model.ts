@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Notification for user-facing events (likes, comments, follows, messages).
 const notificationSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },

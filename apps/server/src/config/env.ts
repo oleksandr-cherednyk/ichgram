@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Centralized env validation to keep config errors fail-fast.
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])

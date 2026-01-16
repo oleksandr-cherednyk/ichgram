@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Like relation between user and post.
 const likeSchema = new Schema(
   {
     postId: { type: Schema.Types.ObjectId, ref: 'Post', required: true },

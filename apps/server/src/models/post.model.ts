@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Post document with author, media, and computed counters.
 const postSchema = new Schema(
   {
     authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },

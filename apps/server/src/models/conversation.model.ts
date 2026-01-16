@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Conversation between two or more participants.
 const conversationSchema = new Schema(
   {
     participantIds: {

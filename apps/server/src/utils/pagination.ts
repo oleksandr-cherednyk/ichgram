@@ -1,3 +1,4 @@
+// Shared pagination defaults across list endpoints.
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 50;
 
@@ -30,6 +31,7 @@ export const parseLimit = (limit?: number | string | null): number => {
   return Math.min(Math.trunc(parsed), MAX_LIMIT);
 };
 
+// Cursor is an opaque base64url-encoded payload.
 export const encodeCursor = (payload: CursorPayload): string =>
   Buffer.from(JSON.stringify(payload)).toString('base64url');
 

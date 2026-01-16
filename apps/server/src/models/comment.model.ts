@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Comment entity tied to a post and author.
 const commentSchema = new Schema(
   {
     postId: { type: Schema.Types.ObjectId, ref: 'Post', required: true },

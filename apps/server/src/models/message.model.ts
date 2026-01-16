@@ -1,5 +1,6 @@
 import { Schema, model, models, type InferSchemaType } from 'mongoose';
 
+// Message inside a conversation.
 const messageSchema = new Schema(
   {
     conversationId: {

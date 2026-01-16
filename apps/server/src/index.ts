@@ -1,5 +1,6 @@
 import { connectToDatabase, env, registerGracefulShutdown } from './config';
 
+// Bootstraps core infrastructure until the HTTP server is added.
 const bootstrap = async (): Promise<void> => {
   await connectToDatabase();
   registerGracefulShutdown();
