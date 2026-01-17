@@ -38,11 +38,15 @@ const buildTokenPair = (userId: string): TokenPair => ({
   refreshToken: signRefreshToken(userId),
 });
 
-type UserDoc = NonNullable<Awaited<ReturnType<typeof UserModel.findById>>>;
+type AuthUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  username: string;
+  avatarUrl?: string | null;
+};
 
-const buildAuthResult = (
-  user: Pick<UserDoc, 'id' | 'email' | 'fullName' | 'username' | 'avatarUrl'>,
-): AuthResult => ({
+const buildAuthResult = (user: AuthUser): AuthResult => ({
   user: {
     id: user.id,
     email: user.email,

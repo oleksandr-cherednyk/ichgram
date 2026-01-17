@@ -14,9 +14,15 @@ import {
   type RegisterInput,
 } from '../validations';
 
-type UserDoc = NonNullable<Awaited<ReturnType<typeof UserModel.findById>>>;
+type UserResponseInput = {
+  id: string;
+  email: string;
+  username: string;
+  fullName: string;
+  avatarUrl?: string | null;
+};
 
-const getUserResponse = (user: UserDoc) => ({
+const getUserResponse = (user: UserResponseInput) => ({
   id: user.id,
   email: user.email,
   username: user.username,
