@@ -4,6 +4,7 @@ import { UserModel } from '../models';
 import { loginUser, refreshSession, registerUser } from '../services';
 import {
   clearRefreshCookie,
+  createApiError,
   getRefreshTokenFromCookies,
   setRefreshCookie,
 } from '../utils';
@@ -13,6 +14,27 @@ import {
   type RegisterInput,
 } from '../validations';
 
+type UserDoc = NonNullable<Awaited<ReturnType<typeof UserModel.findById>>>;
+
+const getUserResponse = (user: UserDoc) => ({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+  fullName: user.fullName,
+  avatarUrl: user.avatarUrl ?? null,
+});
+
+const sendAuthResponse = (
+  response: Response,
+  result: { user: ReturnType<typeof getUserResponse>; accessToken: string },
+  status: number,
+) => {
+  response.status(status).json({
+    user: result.user,
+    accessToken: result.accessToken,
+  });
+};
+
 export const register = async (
   request: Request<{}, {}, RegisterInput>,
   response: Response,
@@ -21,10 +43,7 @@ export const register = async (
 
   setRefreshCookie(response, result.refreshToken);
 
-  response.status(201).json({
-    user: result.user,
-    accessToken: result.accessToken,
-  });
+  sendAuthResponse(response, result, 201);
 };
 
 export const login = async (
@@ -35,10 +54,7 @@ export const login = async (
 
   setRefreshCookie(response, result.refreshToken);
 
-  response.json({
-    user: result.user,
-    accessToken: result.accessToken,
-  });
+  sendAuthResponse(response, result, 200);
 };
 
 export const logout = async (_request: Request, response: Response) => {
@@ -53,11 +69,7 @@ export const refresh = async (
   const refreshToken = getRefreshTokenFromCookies(request.cookies);
 
   if (!refreshToken) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Refresh token missing',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Refresh token missing');
   }
 
   const result = await refreshSession(refreshToken);
@@ -69,29 +81,15 @@ export const refresh = async (
 
 export const me = async (request: Request, response: Response) => {
   if (!request.userId) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Authentication required',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Authentication required');
   }
 
   const user = await UserModel.findById(request.userId);
   if (!user) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Authentication required',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Authentication required');
   }
 
   response.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      fullName: user.fullName,
-      avatarUrl: user.avatarUrl,
-    },
+    user: getUserResponse(user),
   });
 };

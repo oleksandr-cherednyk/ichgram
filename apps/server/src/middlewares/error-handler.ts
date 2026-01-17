@@ -1,14 +1,7 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import { ZodError } from 'zod';
 
-import { type ApiErrorPayload } from '../utils';
-
-export type ApiError = {
-  status: number;
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-};
+import { type ApiError, type ApiErrorPayload } from '../utils';
 
 const buildPayload = (
   error: ApiError,

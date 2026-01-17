@@ -1,12 +1,12 @@
 import { type NextFunction, type Request, type Response } from 'express';
 
-import { verifyAccessToken } from '../utils';
+import { createApiError, verifyAccessToken } from '../utils';
 
-const unauthorizedError = {
-  status: 401,
-  code: 'UNAUTHORIZED',
-  message: 'Authentication required',
-};
+const unauthorizedError = createApiError(
+  401,
+  'UNAUTHORIZED',
+  'Authentication required',
+);
 
 export const requireAuth = (
   request: Request,

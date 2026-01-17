@@ -11,7 +11,7 @@ const userSchema = new Schema(
       trim: true,
     },
     username: { type: String, required: true, unique: true, trim: true },
-    fullName: { type: String, trim: true },
+    fullName: { type: String, required: true, trim: true },
     passwordHash: { type: String, required: true },
     avatarUrl: { type: String },
     bio: { type: String, maxlength: 160 },

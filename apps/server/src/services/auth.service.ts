@@ -1,16 +1,13 @@
 import bcrypt from 'bcrypt';
-import { z } from 'zod';
 
 import { UserModel } from '../models';
 import {
+  createApiError,
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } from '../utils';
-import { type loginSchema, type registerSchema } from '../validations';
-
-type RegisterInput = z.infer<typeof registerSchema>;
-type LoginInput = z.infer<typeof loginSchema>;
+import { type LoginInput, type RegisterInput } from '../validations';
 
 type AuthResult = {
   user: {
@@ -18,7 +15,13 @@ type AuthResult = {
     email: string;
     fullName: string;
     username: string;
+    avatarUrl: string | null;
   };
+  accessToken: string;
+  refreshToken: string;
+};
+
+type TokenPair = {
   accessToken: string;
   refreshToken: string;
 };
@@ -30,6 +33,26 @@ type RefreshResult = {
 
 const SALT_ROUNDS = 10;
 
+const buildTokenPair = (userId: string): TokenPair => ({
+  accessToken: signAccessToken(userId),
+  refreshToken: signRefreshToken(userId),
+});
+
+type UserDoc = NonNullable<Awaited<ReturnType<typeof UserModel.findById>>>;
+
+const buildAuthResult = (
+  user: Pick<UserDoc, 'id' | 'email' | 'fullName' | 'username' | 'avatarUrl'>,
+): AuthResult => ({
+  user: {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    avatarUrl: user.avatarUrl ?? null,
+  },
+  ...buildTokenPair(user.id),
+});
+
 export const registerUser = async (
   input: RegisterInput,
 ): Promise<AuthResult> => {
@@ -39,11 +62,7 @@ export const registerUser = async (
   });
 
   if (existing) {
-    throw {
-      status: 409,
-      code: 'CONFLICT',
-      message: 'Email or username already in use',
-    };
+    throw createApiError(409, 'CONFLICT', 'Email or username already in use');
   }
 
   const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
@@ -54,48 +73,22 @@ export const registerUser = async (
     passwordHash,
   });
 
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName ?? '',
-      username: user.username,
-    },
-    accessToken: signAccessToken(user.id),
-    refreshToken: signRefreshToken(user.id),
-  };
+  return buildAuthResult(user);
 };
 
 export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
   const normalizedEmail = input.email.trim().toLowerCase();
   const user = await UserModel.findOne({ email: normalizedEmail });
   if (!user) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Invalid credentials',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Invalid credentials');
   }
 
   const matches = await bcrypt.compare(input.password, user.passwordHash);
   if (!matches) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Invalid credentials',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Invalid credentials');
   }
 
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName ?? '',
-      username: user.username,
-    },
-    accessToken: signAccessToken(user.id),
-    refreshToken: signRefreshToken(user.id),
-  };
+  return buildAuthResult(user);
 };
 
 export const refreshSession = async (
@@ -111,24 +104,13 @@ export const refreshSession = async (
   }
 
   if (!subject) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Invalid refresh token',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }
 
   const user = await UserModel.findById(subject);
   if (!user) {
-    throw {
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Invalid refresh token',
-    };
+    throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }
 
-  return {
-    accessToken: signAccessToken(user.id),
-    refreshToken: signRefreshToken(user.id),
-  };
+  return buildTokenPair(user.id);
 };

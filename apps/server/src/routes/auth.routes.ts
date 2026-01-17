@@ -1,14 +1,15 @@
 import { Router } from 'express';
 
 import { login, logout, me, refresh, register } from '../controllers';
+import { env } from '../config';
 import { createRateLimiter, requireAuth, validate } from '../middlewares';
 import { loginSchema, refreshSchema, registerSchema } from '../validations';
 
 export const authRouter = Router();
 
 const authLimiter = createRateLimiter({
-  windowMs: 60_000,
-  max: 5,
+  windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
+  max: env.AUTH_RATE_LIMIT_MAX,
 });
 
 authRouter.post(
