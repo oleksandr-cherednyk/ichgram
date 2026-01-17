@@ -44,6 +44,8 @@
 - [x] Auth middleware requireAuth
 - [x] Auth сервис, контроллеры и роуты
 - [x] Refresh cookie helper (dev/prod flags)
+- [x] Rate limiting для /auth/\*
+- [x] Smoke-тесты auth (register/login/me/refresh/logout)
 
 ## Решения
 
