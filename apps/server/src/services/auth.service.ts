@@ -2,7 +2,11 @@ import bcrypt from 'bcrypt';
 import { z } from 'zod';
 
 import { UserModel } from '../models';
-import { signAccessToken, signRefreshToken } from '../utils';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from '../utils';
 import { type loginSchema, type registerSchema } from '../validations';
 
 type RegisterInput = z.infer<typeof registerSchema>;
@@ -14,6 +18,11 @@ type AuthResult = {
     email: string;
     username: string;
   };
+  accessToken: string;
+  refreshToken: string;
+};
+
+type RefreshResult = {
   accessToken: string;
   refreshToken: string;
 };
@@ -79,6 +88,35 @@ export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
       email: user.email,
       username: user.username,
     },
+    accessToken: signAccessToken(user.id),
+    refreshToken: signRefreshToken(user.id),
+  };
+};
+
+export const refreshSession = async (
+  refreshToken: string,
+): Promise<RefreshResult> => {
+  const payload = verifyRefreshToken(refreshToken);
+  const subject = payload.sub;
+
+  if (typeof subject !== 'string' || !subject) {
+    throw {
+      status: 401,
+      code: 'UNAUTHORIZED',
+      message: 'Invalid refresh token',
+    };
+  }
+
+  const user = await UserModel.findById(subject);
+  if (!user) {
+    throw {
+      status: 401,
+      code: 'UNAUTHORIZED',
+      message: 'Invalid refresh token',
+    };
+  }
+
+  return {
     accessToken: signAccessToken(user.id),
     refreshToken: signRefreshToken(user.id),
   };

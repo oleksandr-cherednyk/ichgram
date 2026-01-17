@@ -39,6 +39,11 @@
 - [ ] Детальный план в docs/plan/PHASE_2_DETAIL.md
 - [x] Базовый Express app с CORS/cookies middleware
 - [x] HTTP сервер + health route
+- [x] Zod-валидации auth + middleware validate
+- [x] JWT утилиты
+- [x] Auth middleware requireAuth
+- [x] Auth сервис, контроллеры и роуты
+- [x] Refresh cookie helper (dev/prod flags)
 
 ## Решения
 
