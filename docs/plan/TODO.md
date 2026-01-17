@@ -36,7 +36,9 @@
 
 ## Фаза 2 — Auth, сессии и безопасность
 
-- [ ] Детальный план в docs/plan/PHASE_2_DETAIL.md
+- Статус: закрыта
+
+- [x] Детальный план в docs/plan/PHASE_2_DETAIL.md
 - [x] Базовый Express app с CORS/cookies middleware
 - [x] HTTP сервер + health route
 - [x] Zod-валидации auth + middleware validate
