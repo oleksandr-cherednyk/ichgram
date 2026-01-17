@@ -33,6 +33,24 @@
 - БД должна подключаться до обработки запросов.
 - error handler должен быть последним, чтобы ловить все ошибки.
 
+### Схема запуска сервера (Mermaid)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Node as Node.js
+  participant App as Express app
+  participant DB as MongoDB
+
+  Node->>DB: connectToDatabase()
+  Node->>Node: registerGracefulShutdown()
+  Node->>App: createApp()
+  App->>App: mount /health
+  App->>App: mount /api/auth
+  App->>App: mount errorHandler
+  Node->>App: listen(PORT)
+```
+
 ## 3) Конфигурация окружения
 
 Файл: `apps/server/src/config/env.ts`
@@ -210,6 +228,37 @@
 - Вызывают сервис.
 - Ставят/очищают refresh cookie.
 - Формируют ответ.
+
+### Схема auth flow (Mermaid)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Client
+  participant API as /api/auth
+  participant Svc as AuthService
+  participant DB as MongoDB
+
+  C->>API: POST /register (email, fullName, username, password)
+  API->>Svc: registerUser()
+  Svc->>DB: create user
+  Svc-->>API: access + refresh
+  API-->>C: 201 + accessToken + refresh cookie
+
+  C->>API: POST /login (email, password)
+  API->>Svc: loginUser()
+  Svc->>DB: find user + compare password
+  Svc-->>API: access + refresh
+  API-->>C: 200 + accessToken + refresh cookie
+
+  C->>API: POST /refresh (cookie)
+  API->>Svc: refreshSession()
+  Svc-->>API: new access + refresh
+  API-->>C: 200 + accessToken + refresh cookie
+
+  C->>API: GET /me (Bearer accessToken)
+  API-->>C: 200 + user profile
+```
 
 ## 13) Auth роуты
 
