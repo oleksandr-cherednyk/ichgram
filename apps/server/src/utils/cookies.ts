@@ -1,4 +1,4 @@
-import { type Response } from 'express';
+import { type Request, type Response } from 'express';
 
 import { env } from '../config';
 
@@ -24,7 +24,7 @@ export const clearRefreshCookie = (response: Response): void => {
 };
 
 export const getRefreshTokenFromCookies = (
-  cookies: Record<string, unknown> | undefined,
+  cookies: Request['cookies'] | undefined,
 ): string | null => {
   const value = cookies?.[REFRESH_COOKIE_NAME];
   return typeof value === 'string' && value.length > 0 ? value : null;

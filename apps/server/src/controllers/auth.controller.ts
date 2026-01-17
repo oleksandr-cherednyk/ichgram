@@ -7,8 +7,16 @@ import {
   getRefreshTokenFromCookies,
   setRefreshCookie,
 } from '../utils';
+import {
+  type LoginInput,
+  type RefreshInput,
+  type RegisterInput,
+} from '../validations';
 
-export const register = async (request: Request, response: Response) => {
+export const register = async (
+  request: Request<{}, {}, RegisterInput>,
+  response: Response,
+) => {
   const result = await registerUser(request.body);
 
   setRefreshCookie(response, result.refreshToken);
@@ -19,7 +27,10 @@ export const register = async (request: Request, response: Response) => {
   });
 };
 
-export const login = async (request: Request, response: Response) => {
+export const login = async (
+  request: Request<{}, {}, LoginInput>,
+  response: Response,
+) => {
   const result = await loginUser(request.body);
 
   setRefreshCookie(response, result.refreshToken);
@@ -35,7 +46,10 @@ export const logout = async (_request: Request, response: Response) => {
   response.json({ ok: true });
 };
 
-export const refresh = async (request: Request, response: Response) => {
+export const refresh = async (
+  request: Request<{}, {}, RefreshInput>,
+  response: Response,
+) => {
   const refreshToken = getRefreshTokenFromCookies(request.cookies);
 
   if (!refreshToken) {

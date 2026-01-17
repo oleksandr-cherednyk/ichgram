@@ -1,5 +1,8 @@
-import { type Request, type Response } from 'express';
-import rateLimit, { type RateLimitOptions } from 'express-rate-limit';
+import { type NextFunction, type Request, type Response } from 'express';
+import rateLimit, {
+  type Options,
+  type RateLimitExceededEventHandler,
+} from 'express-rate-limit';
 
 import { type ApiErrorPayload } from '../utils';
 
@@ -16,11 +19,11 @@ const buildPayload = (requestId?: string): ApiErrorPayload => ({
   },
 });
 
-const handler: RateLimitOptions['handler'] = (
+const handler: RateLimitExceededEventHandler = (
   request: Request,
   response: Response,
-  _next,
-  options,
+  _next: NextFunction,
+  options: Options,
 ) => {
   response.status(options.statusCode).json(buildPayload(request.requestId));
 };
