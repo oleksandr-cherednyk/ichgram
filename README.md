@@ -60,6 +60,7 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 - docs/SECURITY.md
 - docs/PERFORMANCE.md
 - docs/API_OVERVIEW.md
+- docs/EXPLANATIONS.md
 
 ---
 
