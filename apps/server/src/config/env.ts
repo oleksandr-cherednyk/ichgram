@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { z } from 'zod';
 
 // Centralized env validation to keep config errors fail-fast.
