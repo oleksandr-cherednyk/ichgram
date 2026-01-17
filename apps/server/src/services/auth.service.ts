@@ -33,8 +33,9 @@ const SALT_ROUNDS = 10;
 export const registerUser = async (
   input: RegisterInput,
 ): Promise<AuthResult> => {
+  const normalizedEmail = input.email.trim().toLowerCase();
   const existing = await UserModel.findOne({
-    $or: [{ email: input.email }, { username: input.username }],
+    $or: [{ email: normalizedEmail }, { username: input.username }],
   });
 
   if (existing) {
@@ -47,7 +48,7 @@ export const registerUser = async (
 
   const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
   const user = await UserModel.create({
-    email: input.email,
+    email: normalizedEmail,
     fullName: input.fullName,
     username: input.username,
     passwordHash,
@@ -66,7 +67,8 @@ export const registerUser = async (
 };
 
 export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
-  const user = await UserModel.findOne({ email: input.email });
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const user = await UserModel.findOne({ email: normalizedEmail });
   if (!user) {
     throw {
       status: 401,
