@@ -16,6 +16,7 @@ type AuthResult = {
   user: {
     id: string;
     email: string;
+    fullName: string;
     username: string;
   };
   accessToken: string;
@@ -56,6 +57,7 @@ export const registerUser = async (
     user: {
       id: user.id,
       email: user.email,
+      fullName: user.fullName ?? '',
       username: user.username,
     },
     accessToken: signAccessToken(user.id),
@@ -86,6 +88,7 @@ export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
     user: {
       id: user.id,
       email: user.email,
+      fullName: user.fullName ?? '',
       username: user.username,
     },
     accessToken: signAccessToken(user.id),
@@ -96,10 +99,16 @@ export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
 export const refreshSession = async (
   refreshToken: string,
 ): Promise<RefreshResult> => {
-  const payload = verifyRefreshToken(refreshToken);
-  const subject = payload.sub;
+  let subject: string | null = null;
 
-  if (typeof subject !== 'string' || !subject) {
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+    subject = typeof payload.sub === 'string' ? payload.sub : null;
+  } catch {
+    subject = null;
+  }
+
+  if (!subject) {
     throw {
       status: 401,
       code: 'UNAUTHORIZED',
