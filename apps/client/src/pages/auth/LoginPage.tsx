@@ -38,32 +38,20 @@ export const LoginPage = () => {
   };
 
   return (
-    <section className="min-h-screen bg-zinc-950 px-6 py-12 text-zinc-100">
-      <div className="mx-auto flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/60 shadow-2xl shadow-black/30 md:flex-row">
-        <div className="relative flex w-full flex-col justify-end bg-zinc-950/80 p-10 md:w-1/2">
+    <section className="flex min-h-screen items-center justify-center">
+      <div className="mx-auto flex w-full max-w-5xl flex-col overflow-hidden  md:flex-row">
+        <div className="flex w-full flex-col justify-between gap-8p-10 md:w-1/2">
           <img
             src={loginHero}
             alt="ICHgram collage"
-            className="absolute inset-0 h-full w-full object-cover opacity-60"
+            className="h-56 w-full object-contain"
           />
-          <div className="relative">
-            <p className="text-sm uppercase tracking-[0.3em] text-zinc-400">
-              Welcome back
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight">
-              Log in to your
-              <span className="block text-zinc-300">creative circle</span>
-            </h2>
-            <p className="mt-4 text-sm text-zinc-400">
-              Share moments, reply to stories, and keep your feed alive.
-            </p>
-          </div>
         </div>
         <div className="w-full p-10 md:w-1/2">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-semibold">Log in</h3>
             <Link
-              className="text-sm text-zinc-400 hover:text-zinc-200"
+              className="text-sm text-zinc-500 hover:text-zinc-900"
               to="/signup"
             >
               Create account
@@ -113,10 +101,10 @@ export const LoginPage = () => {
                 name="remember"
                 render={({ field }) => (
                   <FormItem>
-                    <label className="flex items-center gap-2 text-sm text-zinc-400">
+                    <label className="flex items-center gap-2 text-sm text-zinc-500">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border border-zinc-700 bg-zinc-900 text-zinc-200"
+                        className="h-4 w-4 rounded border border-zinc-300 bg-white text-zinc-900"
                         checked={field.value}
                         onChange={field.onChange}
                       />
@@ -125,9 +113,9 @@ export const LoginPage = () => {
                   </FormItem>
                 )}
               />
-              <div className="flex items-center justify-between text-sm text-zinc-400">
+              <div className="flex items-center justify-between text-sm text-zinc-500">
                 <span />
-                <Link className="hover:text-zinc-200" to="/reset">
+                <Link className="hover:text-zinc-900" to="/reset">
                   Reset password
                 </Link>
               </div>
