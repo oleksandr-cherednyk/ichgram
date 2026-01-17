@@ -4,6 +4,7 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { env } from './config';
+import { requestIdMiddleware } from './middlewares';
 
 export const createApp = (): express.Express => {
   const app = express();
@@ -20,6 +21,7 @@ export const createApp = (): express.Express => {
 
   // CORS must be global for cookie-based auth to work in browsers.
   app.use(cors(corsOptions));
+  app.use(requestIdMiddleware);
 
   return app;
 };
