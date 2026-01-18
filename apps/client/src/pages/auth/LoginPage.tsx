@@ -51,10 +51,7 @@ export const LoginPage = () => {
         <div className="w-full md:w-1/2">
           <div className="rounded-xl border border-zinc-200 bg-white px-8 py-10 shadow-sm">
             <div className="text-center">
-              <img src={logo} alt="ICHGRAM" className="mx-auto h-8 w-auto" />
-              <p className="mt-3 text-sm text-zinc-500">
-                Log in to see photos and videos from your friends.
-              </p>
+              <img src={logo} alt="ICHGRAM" className="mx-auto h-24 w-auto" />
             </div>
             <Form {...form}>
               <form
@@ -124,7 +121,7 @@ export const LoginPage = () => {
           </div>
           <div className="mt-4 rounded-xl border border-zinc-200 bg-white px-6 py-4 text-center text-sm text-zinc-600">
             Don&apos;t have an account?{' '}
-            <Link className="font-semibold text-zinc-900" to="/signup">
+            <Link className="font-semibold text-[#0095F6]" to="/signup">
               Sign up
             </Link>
           </div>
