@@ -49,6 +49,17 @@
 - [x] Rate limiting для /auth/\*
 - [x] Smoke-тесты auth (register/login/me/refresh/logout)
 
+## Фаза 8 — Frontend shell и shared UI
+
+- Статус: в работе
+
+- [x] Маршруты /login, /signup, /reset
+- [x] Tailwind + базовые shadcn UI компоненты
+- [x] Логин-страница (Instagram-like layout + RHF + Zod)
+- [x] Signup/Reset страницы приведены к стилю логина
+- [ ] Подключить auth формы к API + обработка ошибок
+- [ ] Базовый auth state (accessToken + isAuthenticated)
+
 ## Решения
 
 - Структура проекта: /apps/client и /apps/server

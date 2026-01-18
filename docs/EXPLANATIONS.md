@@ -315,3 +315,21 @@ Opaque cursor:
 Фаза 2 завершена: auth flow, rate limiting и smoke-тесты реализованы.
 
 Следующий шаг — переход к фазе 3 (CRUD постов + медиа).
+
+## Текущий статус
+
+Backend:
+
+- Фазы 0–2 закрыты: auth endpoints, JWT, refresh cookie, CORS, rate limiting, Zod-валидации, smoke-тесты.
+
+Frontend:
+
+- Настроена маршрутизация `/login`, `/signup`, `/reset`.
+- Подключены Tailwind + базовые компоненты shadcn UI.
+- Логин-страница: Instagram-like макет, hero, карточка, RHF + Zod.
+- Signup/Reset приведены к стилю логина (карточки, отступы, цвета).
+
+Что дальше:
+
+- Подключить login/signup к API + обработка ошибок.
+- Добавить auth state (accessToken, базовый store/cache).
