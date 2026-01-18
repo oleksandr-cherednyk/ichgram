@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import logo from '../../assets/logo/logo.png';
@@ -11,6 +11,7 @@ import { Label } from '../../components/ui/label';
 import { apiRequest } from '../../lib/api';
 import { type ApiError } from '../../types/api';
 import { type AuthResponse } from '../../types/auth';
+import { useAuthStore } from '../../stores/auth';
 
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -32,14 +33,18 @@ export const SignupPage = () => {
     },
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   const onSubmit = async (values: SignupValues) => {
     setFormError(null);
     try {
-      await apiRequest<AuthResponse>('/auth/register', {
+      const response = await apiRequest<AuthResponse>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(values),
       });
+      setAccessToken(response.accessToken);
+      navigate('/me');
     } catch (error) {
       const apiError = error as { error?: ApiError };
       setFormError(apiError.error?.message ?? 'Sign up failed');

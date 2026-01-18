@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 
 import loginHero from '../../assets/hero/login-hero-2.png';
 import logo from '../../assets/logo/logo.png';
@@ -19,6 +20,7 @@ import { Input } from '../../components/ui/input';
 import { apiRequest } from '../../lib/api';
 import { type AuthResponse } from '../../types/auth';
 import { type ApiError } from '../../types/api';
+import { useAuthStore } from '../../stores/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -36,14 +38,18 @@ export const LoginPage = () => {
     },
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   const onSubmit = async (values: LoginValues) => {
     setFormError(null);
     try {
-      await apiRequest<AuthResponse>('/auth/login', {
+      const response = await apiRequest<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(values),
       });
+      setAccessToken(response.accessToken);
+      navigate('/me');
     } catch (error) {
       const apiError = error as { error?: ApiError };
       setFormError(apiError.error?.message ?? 'Login failed');

@@ -4,6 +4,7 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { ResetPage } from '../pages/auth/ResetPage';
 import { SignupPage } from '../pages/auth/SignupPage';
+import { MePage } from '../pages/MePage';
 
 export const App = () => (
   <Routes>
@@ -12,6 +13,7 @@ export const App = () => (
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/reset" element={<ResetPage />} />
     </Route>
+    <Route path="/me" element={<MePage />} />
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
