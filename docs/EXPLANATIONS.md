@@ -328,8 +328,10 @@ Frontend:
 - Подключены Tailwind + базовые компоненты shadcn UI.
 - Логин-страница: Instagram-like макет, hero, карточка, RHF + Zod.
 - Signup/Reset приведены к стилю логина (карточки, отступы, цвета).
+- Добавлены API вызовы для login/signup, базовый auth store и редирект на `/me`.
+- Страница `/me` с кнопкой выхода (logout) и очисткой auth state.
 
 Что дальше:
 
-- Подключить login/signup к API + обработка ошибок.
-- Добавить auth state (accessToken, базовый store/cache).
+- Подключить reset-форму (RHF + Zod) и показать подтверждение.
+- Маппинг `error.details` на ошибки полей.

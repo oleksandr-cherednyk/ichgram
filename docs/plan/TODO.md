@@ -57,8 +57,11 @@
 - [x] Tailwind + базовые shadcn UI компоненты
 - [x] Логин-страница (Instagram-like layout + RHF + Zod)
 - [x] Signup/Reset страницы приведены к стилю логина
-- [ ] Подключить auth формы к API + обработка ошибок
-- [ ] Базовый auth state (accessToken + isAuthenticated)
+- [x] Подключить auth формы к API + обработка ошибок
+- [x] Базовый auth state (accessToken + isAuthenticated)
+- [x] Страница /me с logout
+- [ ] Reset форма (RHF + Zod) + подтверждение
+- [ ] Маппинг ошибок по полям из error.details
 
 ## Решения
 
