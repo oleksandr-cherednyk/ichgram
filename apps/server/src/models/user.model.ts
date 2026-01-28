@@ -19,8 +19,7 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: true });
+// Note: unique indexes are created automatically by `unique: true` in schema
 
 export type User = InferSchemaType<typeof userSchema>;
 

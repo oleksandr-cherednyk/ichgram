@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { apiRequest } from '../../lib/api';
+import { mapApiErrorsToForm } from '../../lib/form-errors';
 import { type ApiError } from '../../types/api';
 import { type AuthResponse } from '../../types/auth';
 import { useAuthStore } from '../../stores/auth';
@@ -17,7 +18,7 @@ const signupSchema = z.object({
   email: z.string().email('Enter a valid email'),
   fullName: z.string().min(2, 'Enter your full name'),
   username: z.string().min(3, 'Username is too short'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type SignupValues = z.infer<typeof signupSchema>;
@@ -47,7 +48,13 @@ export const SignupPage = () => {
       navigate('/me');
     } catch (error) {
       const apiError = error as { error?: ApiError };
-      setFormError(apiError.error?.message ?? 'Sign up failed');
+      const hasFieldErrors = mapApiErrorsToForm(
+        apiError.error?.details,
+        form.setError,
+      );
+      if (!hasFieldErrors) {
+        setFormError(apiError.error?.message ?? 'Sign up failed');
+      }
     }
   };
 
@@ -84,6 +91,11 @@ export const SignupPage = () => {
                   placeholder="Email"
                   {...form.register('email')}
                 />
+                {form.formState.errors.email && (
+                  <p className="text-xs text-red-500">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-fullname">Full name</Label>
@@ -94,6 +106,11 @@ export const SignupPage = () => {
                   placeholder="Full name"
                   {...form.register('fullName')}
                 />
+                {form.formState.errors.fullName && (
+                  <p className="text-xs text-red-500">
+                    {form.formState.errors.fullName.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-username">Username</Label>
@@ -104,6 +121,11 @@ export const SignupPage = () => {
                   placeholder="Username"
                   {...form.register('username')}
                 />
+                {form.formState.errors.username && (
+                  <p className="text-xs text-red-500">
+                    {form.formState.errors.username.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
@@ -114,6 +136,11 @@ export const SignupPage = () => {
                   placeholder="Password"
                   {...form.register('password')}
                 />
+                {form.formState.errors.password && (
+                  <p className="text-xs text-red-500">
+                    {form.formState.errors.password.message}
+                  </p>
+                )}
               </div>
               <Button
                 type="submit"

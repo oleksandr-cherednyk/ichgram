@@ -9,6 +9,11 @@ import {
 } from '../utils';
 import { type LoginInput, type RegisterInput } from '../validations';
 
+type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
+};
+
 type AuthResult = {
   user: {
     id: string;
@@ -17,36 +22,24 @@ type AuthResult = {
     username: string;
     avatarUrl: string | null;
   };
-  accessToken: string;
-  refreshToken: string;
-};
-
-type TokenPair = {
-  accessToken: string;
-  refreshToken: string;
-};
-
-type RefreshResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+} & TokenPair;
 
 const SALT_ROUNDS = 10;
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const buildTokenPair = (userId: string): TokenPair => ({
   accessToken: signAccessToken(userId),
   refreshToken: signRefreshToken(userId),
 });
 
-type AuthUser = {
+const buildAuthResult = (user: {
   id: string;
   email: string;
   fullName: string;
   username: string;
   avatarUrl?: string | null;
-};
-
-const buildAuthResult = (user: AuthUser): AuthResult => ({
+}): AuthResult => ({
   user: {
     id: user.id,
     email: user.email,
@@ -60,9 +53,9 @@ const buildAuthResult = (user: AuthUser): AuthResult => ({
 export const registerUser = async (
   input: RegisterInput,
 ): Promise<AuthResult> => {
-  const normalizedEmail = input.email.trim().toLowerCase();
+  const email = normalizeEmail(input.email);
   const existing = await UserModel.findOne({
-    $or: [{ email: normalizedEmail }, { username: input.username }],
+    $or: [{ email }, { username: input.username }],
   });
 
   if (existing) {
@@ -71,7 +64,7 @@ export const registerUser = async (
 
   const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
   const user = await UserModel.create({
-    email: normalizedEmail,
+    email,
     fullName: input.fullName,
     username: input.username,
     passwordHash,
@@ -81,8 +74,7 @@ export const registerUser = async (
 };
 
 export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
-  const normalizedEmail = input.email.trim().toLowerCase();
-  const user = await UserModel.findOne({ email: normalizedEmail });
+  const user = await UserModel.findOne({ email: normalizeEmail(input.email) });
   if (!user) {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid credentials');
   }
@@ -95,23 +87,17 @@ export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
   return buildAuthResult(user);
 };
 
-export const refreshSession = async (
-  refreshToken: string,
-): Promise<RefreshResult> => {
-  let subject: string | null = null;
-
+export const refreshSession = async (token: string): Promise<TokenPair> => {
+  let userId: string;
   try {
-    const payload = verifyRefreshToken(refreshToken);
-    subject = typeof payload.sub === 'string' ? payload.sub : null;
+    const payload = verifyRefreshToken(token);
+    if (typeof payload.sub !== 'string') throw new Error();
+    userId = payload.sub;
   } catch {
-    subject = null;
-  }
-
-  if (!subject) {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }
 
-  const user = await UserModel.findById(subject);
+  const user = await UserModel.findById(userId);
   if (!user) {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }

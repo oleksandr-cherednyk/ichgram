@@ -15,13 +15,13 @@ export const validate =
     }
 
     if (schemas.query) {
-      request.query = schemas.query.parse(request.query) as Request['query'];
+      // Validate only - query is read-only in newer express versions
+      schemas.query.parse(request.query);
     }
 
     if (schemas.params) {
-      request.params = schemas.params.parse(
-        request.params,
-      ) as Request['params'];
+      // Validate only - params is read-only in newer express versions
+      schemas.params.parse(request.params);
     }
 
     next();

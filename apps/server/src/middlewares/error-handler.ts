@@ -21,6 +21,9 @@ export const errorHandler = (
   response: Response,
   _next: NextFunction,
 ): void => {
+  // Log all errors for debugging
+  console.error('[ERROR]', error);
+
   if (error instanceof ZodError) {
     const payload = buildPayload(
       {

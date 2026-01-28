@@ -18,13 +18,14 @@ import {
 } from '../../components/ui/form';
 import { Input } from '../../components/ui/input';
 import { apiRequest } from '../../lib/api';
+import { mapApiErrorsToForm } from '../../lib/form-errors';
 import { type AuthResponse } from '../../types/auth';
 import { type ApiError } from '../../types/api';
 import { useAuthStore } from '../../stores/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -52,7 +53,13 @@ export const LoginPage = () => {
       navigate('/me');
     } catch (error) {
       const apiError = error as { error?: ApiError };
-      setFormError(apiError.error?.message ?? 'Login failed');
+      const hasFieldErrors = mapApiErrorsToForm(
+        apiError.error?.details,
+        form.setError,
+      );
+      if (!hasFieldErrors) {
+        setFormError(apiError.error?.message ?? 'Login failed');
+      }
     }
   };
 

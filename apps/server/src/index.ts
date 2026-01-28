@@ -1,9 +1,10 @@
+import express from 'express';
 import http from 'http';
 
 import { connectToDatabase, env, registerGracefulShutdown } from './config';
 import { createApp } from './app';
 import { errorHandler } from './middlewares';
-import { authRouter } from './routes';
+import { authRouter, postRouter, userRouter } from './routes';
 
 // Bootstraps core infrastructure before mounting feature routes.
 const bootstrap = async (): Promise<void> => {
@@ -16,7 +17,13 @@ const bootstrap = async (): Promise<void> => {
     response.json({ status: 'ok' });
   });
 
+  // API routes
   app.use('/api/auth', authRouter);
+  app.use('/api/posts', postRouter);
+  app.use('/api/users', userRouter);
+
+  // Serve uploaded images statically
+  app.use('/uploads', express.static('uploads'));
 
   // Error handler must be registered after all routes.
   app.use(errorHandler);
