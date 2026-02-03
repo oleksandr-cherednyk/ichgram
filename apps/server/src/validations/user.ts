@@ -8,6 +8,14 @@ import { paginationQuerySchema } from './pagination';
 export const updateProfileSchema = z.object({
   fullName: z.string().min(1).max(100).optional(),
   bio: z.string().max(160).optional(),
+  website: z.string().max(200).optional(),
+});
+
+/**
+ * Validation for user search query
+ */
+export const userSearchQuerySchema = paginationQuerySchema.extend({
+  q: z.string().max(100).optional().default(''),
 });
 
 /**
@@ -26,3 +34,4 @@ export const userPostsQuerySchema = paginationQuerySchema;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UsernameParam = z.infer<typeof usernameParamSchema>;
 export type UserPostsQuery = z.infer<typeof userPostsQuerySchema>;
+export type UserSearchQuery = z.infer<typeof userSearchQuerySchema>;

@@ -83,8 +83,8 @@ const processImage = async (
       .jpeg({ quality: JPEG_QUALITY })
       .toFile(filepath);
 
-    // Add file path to request for controller access
-    req.file.path = filepath;
+    // Add URL path (not filesystem path) for database storage
+    req.file.path = `/uploads/posts/${filename}`;
     req.file.filename = filename;
 
     next();
@@ -147,8 +147,8 @@ const processAvatar = async (
       .jpeg({ quality: JPEG_QUALITY })
       .toFile(filepath);
 
-    // Add file path to request
-    req.file.path = filepath;
+    // Add URL path (not filesystem path) for database storage
+    req.file.path = `/uploads/avatars/${filename}`;
     req.file.filename = filename;
 
     next();

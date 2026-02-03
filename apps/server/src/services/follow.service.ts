@@ -1,4 +1,5 @@
 import { FollowModel, UserModel } from '../models';
+import { createNotification } from './notification.service';
 import {
   createApiError,
   decodeCursor,
@@ -54,6 +55,12 @@ export const followUser = async (
 
   // Create follow
   await FollowModel.create({ followerId, followingId });
+
+  await createNotification({
+    userId: followingId,
+    actorId: followerId,
+    type: 'follow',
+  });
 
   return { followed: true };
 };

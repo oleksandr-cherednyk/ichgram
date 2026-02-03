@@ -6,8 +6,15 @@ import { z } from 'zod';
 
 import logo from '../../assets/logo/logo.png';
 import { Button } from '../../components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../components/ui/form';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { apiRequest } from '../../lib/api';
 import { mapApiErrorsToForm } from '../../lib/form-errors';
 import { type ApiError } from '../../types/api';
@@ -65,43 +72,50 @@ export const ResetPage = () => {
                 Enter your email and we&apos;ll send you a reset link.
               </p>
             </div>
-            <form
-              className="space-y-2 mt-6"
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
-              {formError ? (
-                <div className="rounded border border-[#DBDBDB] bg-[#fafafa] px-3 py-2 text-xs text-[#737373]">
-                  {formError}
-                </div>
-              ) : null}
-              {successMessage ? (
-                <div className="rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
-                  {successMessage}
-                </div>
-              ) : null}
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="Email"
-                  {...form.register('email')}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-              <Button
-                type="submit"
-                className="w-full mt-4"
-                disabled={form.formState.isSubmitting}
+            <Form {...form}>
+              <form
+                className="space-y-2 mt-6"
+                onSubmit={form.handleSubmit(onSubmit)}
               >
-                {form.formState.isSubmitting ? 'Sending...' : 'Send reset link'}
-              </Button>
-            </form>
+                {formError ? (
+                  <div className="rounded border border-[#DBDBDB] bg-[#fafafa] px-3 py-2 text-xs text-[#737373]">
+                    {formError}
+                  </div>
+                ) : null}
+                {successMessage ? (
+                  <div className="rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+                    {successMessage}
+                  </div>
+                ) : null}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Email"
+                          autoComplete="email"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting
+                    ? 'Sending...'
+                    : 'Send reset link'}
+                </Button>
+              </form>
+            </Form>
           </div>
           <div className="mt-4 border border-[#DBDBDB] px-6 py-6 text-center text-sm">
             Remembered your password?{' '}

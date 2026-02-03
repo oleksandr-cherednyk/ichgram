@@ -10,7 +10,11 @@ import {
   type PaginationResult,
 } from '../utils';
 import type { UpdateProfileInput } from '../validations';
-import { getFollowersCount, getFollowingCount } from './follow.service';
+import {
+  getFollowersCount,
+  getFollowingCount,
+  isFollowing,
+} from './follow.service';
 
 // ============================================================================
 // Types
@@ -25,10 +29,21 @@ export type UserProfile = {
   fullName: string;
   avatarUrl: string | null;
   bio: string | null;
+  website: string | null;
   postsCount: number;
   followersCount: number;
   followingCount: number;
   createdAt: string;
+};
+
+/**
+ * User search result item
+ */
+export type SearchUserItem = {
+  id: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
 };
 
 /**
@@ -39,6 +54,39 @@ type UserPostItem = {
   imageUrl: string;
   likeCount: number;
   commentCount: number;
+};
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Build a UserProfile from a Mongoose user document.
+ * Fetches postsCount, followersCount, followingCount in parallel.
+ */
+const buildUserProfile = async (
+  user: InstanceType<typeof UserModel>,
+): Promise<UserProfile> => {
+  const userId = user._id.toString();
+
+  const [postsCount, followersCount, followingCount] = await Promise.all([
+    PostModel.countDocuments({ authorId: user._id }),
+    getFollowersCount(userId),
+    getFollowingCount(userId),
+  ]);
+
+  return {
+    id: userId,
+    username: user.username,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl ?? null,
+    bio: user.bio ?? null,
+    website: user.website ?? null,
+    postsCount,
+    followersCount,
+    followingCount,
+    createdAt: user.createdAt.toISOString(),
+  };
 };
 
 // ============================================================================
@@ -55,24 +103,7 @@ export const getCurrentUser = async (userId: string): Promise<UserProfile> => {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
 
-  // Count posts and follows in parallel
-  const [postsCount, followersCount, followingCount] = await Promise.all([
-    PostModel.countDocuments({ authorId: userId }),
-    getFollowersCount(userId),
-    getFollowingCount(userId),
-  ]);
-
-  return {
-    id: user._id.toString(),
-    username: user.username,
-    fullName: user.fullName,
-    avatarUrl: user.avatarUrl ?? null,
-    bio: user.bio ?? null,
-    postsCount,
-    followersCount,
-    followingCount,
-    createdAt: user.createdAt.toISOString(),
-  };
+  return buildUserProfile(user);
 };
 
 // ============================================================================
@@ -80,11 +111,20 @@ export const getCurrentUser = async (userId: string): Promise<UserProfile> => {
 // ============================================================================
 
 /**
+ * User profile with optional isFollowing field
+ */
+export type UserProfileWithFollow = UserProfile & {
+  isFollowing?: boolean;
+};
+
+/**
  * Get user profile by username (public)
+ * If currentUserId is provided, includes isFollowing status
  */
 export const getUserByUsername = async (
   username: string,
-): Promise<UserProfile> => {
+  currentUserId?: string,
+): Promise<UserProfileWithFollow> => {
   const user = await UserModel.findOne({ username });
 
   if (!user) {
@@ -92,25 +132,14 @@ export const getUserByUsername = async (
   }
 
   const userId = user._id.toString();
+  const profile: UserProfileWithFollow = await buildUserProfile(user);
 
-  // Count posts and follows in parallel
-  const [postsCount, followersCount, followingCount] = await Promise.all([
-    PostModel.countDocuments({ authorId: user._id }),
-    getFollowersCount(userId),
-    getFollowingCount(userId),
-  ]);
+  // Add isFollowing if current user is authenticated and viewing another profile
+  if (currentUserId && currentUserId !== userId) {
+    profile.isFollowing = await isFollowing(currentUserId, userId);
+  }
 
-  return {
-    id: userId,
-    username: user.username,
-    fullName: user.fullName,
-    avatarUrl: user.avatarUrl ?? null,
-    bio: user.bio ?? null,
-    postsCount,
-    followersCount,
-    followingCount,
-    createdAt: user.createdAt.toISOString(),
-  };
+  return profile;
 };
 
 // ============================================================================
@@ -124,13 +153,20 @@ export const updateProfile = async (
   userId: string,
   input: UpdateProfileInput,
 ): Promise<UserProfile> => {
-  const updateData: Partial<{ fullName: string; bio: string }> = {};
+  const updateData: Partial<{
+    fullName: string;
+    bio: string;
+    website: string;
+  }> = {};
 
   if (input.fullName !== undefined) {
     updateData.fullName = input.fullName;
   }
   if (input.bio !== undefined) {
     updateData.bio = input.bio;
+  }
+  if (input.website !== undefined) {
+    updateData.website = input.website;
   }
 
   const user = await UserModel.findByIdAndUpdate(userId, updateData, {
@@ -141,24 +177,7 @@ export const updateProfile = async (
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
 
-  // Count posts and follows in parallel
-  const [postsCount, followersCount, followingCount] = await Promise.all([
-    PostModel.countDocuments({ authorId: userId }),
-    getFollowersCount(userId),
-    getFollowingCount(userId),
-  ]);
-
-  return {
-    id: user._id.toString(),
-    username: user.username,
-    fullName: user.fullName,
-    avatarUrl: user.avatarUrl ?? null,
-    bio: user.bio ?? null,
-    postsCount,
-    followersCount,
-    followingCount,
-    createdAt: user.createdAt.toISOString(),
-  };
+  return buildUserProfile(user);
 };
 
 // ============================================================================
@@ -191,24 +210,7 @@ export const updateAvatar = async (
     void deleteFile(oldAvatarUrl);
   }
 
-  // Count posts and follows in parallel
-  const [postsCount, followersCount, followingCount] = await Promise.all([
-    PostModel.countDocuments({ authorId: userId }),
-    getFollowersCount(userId),
-    getFollowingCount(userId),
-  ]);
-
-  return {
-    id: user._id.toString(),
-    username: user.username,
-    fullName: user.fullName,
-    avatarUrl: user.avatarUrl ?? null,
-    bio: user.bio ?? null,
-    postsCount,
-    followersCount,
-    followingCount,
-    createdAt: user.createdAt.toISOString(),
-  };
+  return buildUserProfile(user);
 };
 
 // ============================================================================
@@ -271,6 +273,73 @@ export const getUserPosts = async (
       imageUrl: post.imageUrl,
       likeCount: post.likeCount,
       commentCount: post.commentCount,
+    })),
+    nextCursor,
+    hasMore,
+  };
+};
+
+// ============================================================================
+// Search Users
+// ============================================================================
+
+/**
+ * Search users by username or fullName
+ */
+export const searchUsers = async (
+  searchQuery: string,
+  cursorParam?: string | null,
+  limitParam?: number | string | null,
+): Promise<PaginationResult<SearchUserItem>> => {
+  const limit = parseLimit(limitParam);
+  const cursor = decodeCursor(cursorParam);
+
+  // Build base query
+  const query: Record<string, unknown> = {};
+
+  if (searchQuery) {
+    // Escape special regex characters
+    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Search by username or fullName (case-insensitive)
+    query.$or = [
+      { username: { $regex: escapedQuery, $options: 'i' } },
+      { fullName: { $regex: escapedQuery, $options: 'i' } },
+    ];
+  }
+
+  // Add cursor pagination filter
+  if (cursor) {
+    query.createdAt = { $lt: new Date(cursor.createdAt) };
+    query._id = { $ne: new Types.ObjectId(cursor.id) };
+  }
+
+  // Fetch users
+  const users = await UserModel.find(query)
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit + 1)
+    .select('username fullName avatarUrl createdAt');
+
+  // Determine if there are more results
+  const hasMore = users.length > limit;
+  const data = users.slice(0, limit);
+
+  // Generate next cursor
+  let nextCursor: string | null = null;
+  if (hasMore && data.length > 0) {
+    const lastUser = data[data.length - 1];
+    nextCursor = encodeCursor({
+      createdAt: lastUser.createdAt.toISOString(),
+      id: lastUser._id.toString(),
+    });
+  }
+
+  return {
+    data: data.map((user) => ({
+      id: user._id.toString(),
+      username: user.username,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl ?? null,
     })),
     nextCursor,
     hasMore,

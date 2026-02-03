@@ -2,11 +2,17 @@ import { Router } from 'express';
 
 import * as followController from '../controllers/follow.controller';
 import * as userController from '../controllers/user.controller';
-import { requireAuth, uploadAvatar, validate } from '../middlewares';
+import {
+  optionalAuth,
+  requireAuth,
+  uploadAvatar,
+  validate,
+} from '../middlewares';
 import {
   updateProfileSchema,
   usernameParamSchema,
   userPostsQuerySchema,
+  userSearchQuerySchema,
 } from '../validations';
 
 export const userRouter = Router();
@@ -44,15 +50,31 @@ userRouter.post(
 );
 
 // ============================================================================
+// Search Users (must be before :username route)
+// ============================================================================
+
+/**
+ * GET /users/search
+ * Search users by username or fullName
+ */
+userRouter.get(
+  '/search',
+  validate({ query: userSearchQuerySchema }),
+  userController.searchUsers,
+);
+
+// ============================================================================
 // Public User Routes
 // ============================================================================
 
 /**
  * GET /users/:username
  * Get user profile by username
+ * Includes isFollowing status if authenticated
  */
 userRouter.get(
   '/:username',
+  optionalAuth,
   validate({ params: usernameParamSchema }),
   userController.getUser,
 );

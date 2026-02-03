@@ -1,14 +1,20 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 import { ProtectedRoute } from '../components/auth';
-import { PlaceholderPage } from '../components/common';
 import { AppShell } from '../layouts/AppShell';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { ResetPage } from '../pages/auth/ResetPage';
 import { SignupPage } from '../pages/auth/SignupPage';
+import { EditProfilePage } from '../pages/EditProfilePage';
+import { ExplorePage } from '../pages/ExplorePage';
+import { FeedPage } from '../pages/FeedPage';
 import { MePage } from '../pages/MePage';
+import { MessagesPage } from '../pages/MessagesPage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+import { PostPage } from '../pages/PostPage';
 import { ProfilePage } from '../pages/ProfilePage';
+import { TagPage } from '../pages/TagPage';
 
 export const App = () => (
   <Routes>
@@ -22,26 +28,18 @@ export const App = () => (
     {/* Protected app routes (with sidebar) */}
     <Route element={<ProtectedRoute />}>
       <Route element={<AppShell />}>
-        <Route path="/" element={<PlaceholderPage title="Home Feed" />} />
-        <Route path="/explore" element={<PlaceholderPage title="Explore" />} />
-        <Route path="/search" element={<PlaceholderPage title="Search" />} />
-        <Route
-          path="/messages"
-          element={<PlaceholderPage title="Messages" />}
-        />
-        <Route
-          path="/notifications"
-          element={<PlaceholderPage title="Notifications" />}
-        />
-        <Route
-          path="/create"
-          element={<PlaceholderPage title="Create Post" />}
-        />
+        <Route path="/" element={<FeedPage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/tags/:tag" element={<TagPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         <Route path="/me" element={<MePage />} />
+        <Route path="/me/edit" element={<EditProfilePage />} />
+        <Route path="/post/:id" element={<PostPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Route>
 
-    <Route path="*" element={<Navigate to="/login" replace />} />
+    <Route path="*" element={<NotFoundPage />} />
   </Routes>
 );

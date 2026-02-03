@@ -1,27 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 
+import { refreshAccessToken } from '../../lib/api';
 import { isTokenExpired } from '../../lib/jwt';
 import { useAuthStore } from '../../stores/auth';
 import { Spinner } from '../ui/spinner';
 
 type AuthStatus = 'checking' | 'authenticated' | 'unauthenticated';
-
-const refreshAccessToken = async (): Promise<string | null> => {
-  try {
-    const response = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    return data.accessToken;
-  } catch {
-    return null;
-  }
-};
 
 /**
  * Wrapper that redirects to /login if user is not authenticated.

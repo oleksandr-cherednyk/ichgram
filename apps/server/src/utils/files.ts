@@ -30,15 +30,27 @@ export const ensureAvatarsDirExists = async (): Promise<void> => {
 };
 
 /**
+ * Converts URL path to filesystem path
+ * e.g., /uploads/posts/file.jpg -> /cwd/uploads/posts/file.jpg
+ */
+const urlToFilePath = (urlPath: string): string => {
+  // Remove leading /uploads/ and join with cwd
+  const relativePath = urlPath.replace(/^\/uploads\//, '');
+  return path.join(process.cwd(), 'uploads', relativePath);
+};
+
+/**
  * Deletes a file from the filesystem
+ * Accepts URL path (e.g., /uploads/posts/file.jpg)
  * Logs error but doesn't throw (file might already be deleted)
  */
-export const deleteFile = async (filePath: string): Promise<void> => {
+export const deleteFile = async (urlPath: string): Promise<void> => {
   try {
+    const filePath = urlToFilePath(urlPath);
     await fs.unlink(filePath);
   } catch (error) {
     // File might not exist, log but don't throw
-    console.error('Failed to delete file:', filePath, error);
+    console.error('Failed to delete file:', urlPath, error);
   }
 };
 

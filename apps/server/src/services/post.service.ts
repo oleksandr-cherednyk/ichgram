@@ -1,6 +1,6 @@
-import type { Types } from 'mongoose';
+import { Types } from 'mongoose';
 
-import { PostModel } from '../models';
+import { CommentModel, FollowModel, PostModel } from '../models';
 import {
   createApiError,
   decodeCursor,
@@ -11,6 +11,7 @@ import {
   type PaginationResult,
 } from '../utils';
 import type { CreatePostInput, UpdatePostInput } from '../validations';
+import { getPostLikeStatus, isPostLikedByUser } from './like.service';
 
 // ============================================================================
 // Types
@@ -37,6 +38,7 @@ export type PostWithAuthor = {
   hashtags: string[];
   likeCount: number;
   commentCount: number;
+  isLiked?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,6 +60,27 @@ type PopulatedPostDoc = {
   commentCount: number;
   createdAt: Date;
   updatedAt: Date;
+};
+
+/**
+ * Last comment preview for feed cards
+ */
+type FeedLastComment = {
+  authorUsername: string;
+  text: string;
+};
+
+/**
+ * Feed post with isLiked and last comment
+ */
+export type FeedPostItem = PostWithAuthor & {
+  isLiked: boolean;
+  lastComment: FeedLastComment | null;
+};
+
+type FeedResult = {
+  data: FeedPostItem[];
+  hasMore: boolean;
 };
 
 // ============================================================================
@@ -116,8 +139,12 @@ export const createPost = async (
 /**
  * Get post by ID with author details
  * Used for post modal view
+ * If userId is provided, includes isLiked status
  */
-export const getPostById = async (postId: string): Promise<PostWithAuthor> => {
+export const getPostById = async (
+  postId: string,
+  userId?: string,
+): Promise<PostWithAuthor> => {
   const post = await PostModel.findById(postId).populate(
     'authorId',
     'username avatarUrl',
@@ -127,17 +154,25 @@ export const getPostById = async (postId: string): Promise<PostWithAuthor> => {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
   }
 
-  return formatPost(post as unknown as PopulatedPostDoc);
+  const formattedPost = formatPost(post as unknown as PopulatedPostDoc);
+
+  // Add isLiked if user is authenticated
+  if (userId) {
+    formattedPost.isLiked = await isPostLikedByUser(userId, postId);
+  }
+
+  return formattedPost;
 };
 
 /**
- * Update post caption (only owner can update)
+ * Update post caption and/or image (owner only)
  * Automatically re-extracts hashtags from new caption
  */
 export const updatePost = async (
   postId: string,
   userId: string,
   input: UpdatePostInput,
+  newImageUrl?: string,
 ): Promise<PostWithAuthor> => {
   const post = await PostModel.findById(postId);
 
@@ -150,18 +185,24 @@ export const updatePost = async (
     throw createApiError(403, 'FORBIDDEN', 'You can only edit your own posts');
   }
 
-  // Extract new hashtags
-  const hashtags = extractHashtags(input.caption);
+  const updateFields: Record<string, unknown> = {};
+
+  if (input.caption !== undefined) {
+    updateFields.caption = input.caption;
+    updateFields.hashtags = extractHashtags(input.caption);
+  }
+
+  if (newImageUrl) {
+    const oldImageUrl = post.imageUrl;
+    updateFields.imageUrl = newImageUrl;
+    // Delete old image (non-blocking)
+    void deleteFile(oldImageUrl);
+  }
 
   // Update post
-  const updated = await PostModel.findByIdAndUpdate(
-    postId,
-    {
-      caption: input.caption,
-      hashtags,
-    },
-    { new: true },
-  ).populate('authorId', 'username avatarUrl');
+  const updated = await PostModel.findByIdAndUpdate(postId, updateFields, {
+    new: true,
+  }).populate('authorId', 'username avatarUrl');
 
   return formatPost(updated as unknown as PopulatedPostDoc);
 };
@@ -204,42 +245,139 @@ export const deletePost = async (
 // ============================================================================
 
 /**
- * Get feed posts with cursor pagination
- * Currently returns all posts sorted by creation date
- * TODO: Filter by followings in future phase
+ * Get feed posts — random posts from followed users
+ * Uses $sample for randomization, exclude-based pagination to avoid duplicates
  */
 export const getFeed = async (
-  _userId: string,
+  userId: string,
+  excludeIds: string[] = [],
+  limitParam?: number | string | null,
+): Promise<FeedResult> => {
+  const limit = parseLimit(limitParam);
+
+  // Get IDs of users the current user follows
+  const follows = await FollowModel.find({ followerId: userId }).select(
+    'followingId',
+  );
+  const followingIds = follows.map((f) => f.followingId);
+
+  if (followingIds.length === 0) {
+    return { data: [], hasMore: false };
+  }
+
+  // Build match filter: posts from followed users, excluding already-seen posts
+  const matchFilter: Record<string, unknown> = {
+    authorId: { $in: followingIds },
+  };
+
+  if (excludeIds.length > 0) {
+    matchFilter._id = {
+      $nin: excludeIds.map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  // Count remaining posts to determine hasMore
+  const totalRemaining = await PostModel.countDocuments(matchFilter);
+
+  // Sample random posts
+  const sampleSize = Math.min(limit, totalRemaining);
+  if (sampleSize === 0) {
+    return { data: [], hasMore: false };
+  }
+
+  const sampled = await PostModel.aggregate([
+    { $match: matchFilter },
+    { $sample: { size: sampleSize } },
+  ]);
+
+  // Populate author info
+  const postIds = sampled.map((p: { _id: Types.ObjectId }) => p._id);
+  const posts = await PostModel.find({ _id: { $in: postIds } }).populate(
+    'authorId',
+    'username avatarUrl',
+  );
+
+  // Batch fetch isLiked status
+  const likeStatusMap = await getPostLikeStatus(
+    userId,
+    posts.map((p) => p._id.toString()),
+  );
+
+  // Batch fetch last comment per post
+  const lastComments = await CommentModel.aggregate([
+    { $match: { postId: { $in: postIds } } },
+    { $sort: { createdAt: -1 as const } },
+    { $group: { _id: '$postId', commentId: { $first: '$_id' } } },
+  ]);
+
+  const commentIds = lastComments.map(
+    (c: { commentId: Types.ObjectId }) => c.commentId,
+  );
+  const comments = await CommentModel.find({
+    _id: { $in: commentIds },
+  }).populate('authorId', 'username');
+
+  const commentMap = new Map<
+    string,
+    { authorUsername: string; text: string }
+  >();
+  for (const comment of comments) {
+    const author = comment.authorId as unknown as {
+      _id: Types.ObjectId;
+      username: string;
+    };
+    commentMap.set(comment.postId.toString(), {
+      authorUsername: author.username,
+      text: comment.text,
+    });
+  }
+
+  // Format response
+  const data: FeedPostItem[] = posts.map((post) => {
+    const formatted = formatPost(post as unknown as PopulatedPostDoc);
+    const postIdStr = post._id.toString();
+    return {
+      ...formatted,
+      isLiked: likeStatusMap.has(postIdStr),
+      lastComment: commentMap.get(postIdStr) ?? null,
+    };
+  });
+
+  return {
+    data,
+    hasMore: totalRemaining > sampleSize,
+  };
+};
+
+/**
+ * Get explore posts with cursor pagination
+ * Returns all posts sorted by creation date
+ */
+export const getExplorePosts = async (
   cursorParam?: string | null,
   limitParam?: number | string | null,
 ): Promise<PaginationResult<PostWithAuthor>> => {
   const limit = parseLimit(limitParam);
   const cursor = decodeCursor(cursorParam);
 
-  // Build query based on cursor
   const query: {
     createdAt?: { $lt: Date };
     _id?: { $ne: string };
   } = {};
 
   if (cursor) {
-    // Get posts created before cursor timestamp
     query.createdAt = { $lt: new Date(cursor.createdAt) };
-    // Exclude the cursor post itself (tie-breaker)
     query._id = { $ne: cursor.id };
   }
 
-  // Fetch limit + 1 to determine if there are more results
   const posts = await PostModel.find(query)
-    .sort({ createdAt: -1, _id: -1 }) // Newest first, _id as tie-breaker
+    .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
     .populate('authorId', 'username avatarUrl');
 
-  // Determine if there are more results
   const hasMore = posts.length > limit;
   const data = posts.slice(0, limit);
 
-  // Generate next cursor from last post
   let nextCursor: string | null = null;
   if (hasMore && data.length > 0) {
     const lastPost = data[data.length - 1];
@@ -257,15 +395,20 @@ export const getFeed = async (
 };
 
 /**
- * Get explore posts with cursor pagination
- * Currently same as feed, can add randomization/filtering later
+ * Get top posts sorted by like count (most popular)
+ * Used for the explore page grid
  */
-export const getExplorePosts = async (
-  userId: string,
-  cursorParam?: string | null,
-  limitParam?: number | string | null,
-): Promise<PaginationResult<PostWithAuthor>> => {
-  // For now, explore is the same as feed
-  // TODO: Add randomization or exclude own posts in future
-  return getFeed(userId, cursorParam, limitParam);
+export const getTopPosts = async (
+  limit: number = 10,
+): Promise<PostWithAuthor[]> => {
+  // Over-fetch to account for posts whose author was deleted
+  const posts = await PostModel.find()
+    .sort({ likeCount: -1, createdAt: -1 })
+    .limit(limit * 3)
+    .populate('authorId', 'username avatarUrl');
+
+  return posts
+    .filter((post) => post.authorId != null)
+    .slice(0, limit)
+    .map((post) => formatPost(post as unknown as PopulatedPostDoc));
 };

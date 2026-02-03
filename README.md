@@ -1,66 +1,90 @@
 # ICHgram — Instagram-like Social App (React + Express + MongoDB)
 
-ICHgram is a full-stack social media app inspired by Instagram.
-It includes authentication, posts feed, likes/comments, user profiles, search, notifications and real-time chat.
-
-## Demo
-
-- Live demo: _(add link)_
-- Figma screens: _(add link or screenshots folder)_
-
-## Screenshots
-
-> Add screenshots here (feed, profile, post modal, create post, messages, notifications panel, search panel)
+ICHgram is a full-stack social media application inspired by Instagram, built from a Figma design.
+It features authentication, a posts feed, likes/comments, user profiles, follow system, search, hashtags, notifications, and real-time direct messaging.
 
 ## Features
 
 ### Authentication
 
 - Sign up / Log in / Log out
-- Refresh session (access + refresh tokens)
-- Password reset UI (optional)
+- JWT access token (15 min) + httpOnly refresh cookie (7 days)
+- Auto-refresh on 401 with race condition protection
+- Protected routes with token expiry check
 
 ### Posts
 
-- Feed page (grid layout inspired by Instagram)
-- Explore page (media grid)
-- Create post (image upload + caption)
-- Edit/Delete own post
-- Post modal view
+- Home feed page (responsive grid, max 6 latest posts)
+- Explore page (3-column grid with tall items spanning 2 rows)
+- Create post (image upload + caption with hashtag extraction)
+- Edit / Delete own post (3-dot actions menu)
+- Post detail modal and standalone post page
+- Post caption with truncated preview and "more" button
 
 ### Social actions
 
-- Like / Unlike (optimistic updates)
-- Comments (pagination)
-- Follow / Unfollow (optional)
+- Like / Unlike posts (optimistic updates)
+- Like / Unlike comments
+- Comments with cursor pagination
+- Follow / Unfollow users
+- Followers / Following lists (paginated)
 
 ### Search
 
-- Slide-in Search panel
-- User search by username/full name
+- Slide-in Search panel (full-width on mobile)
+- User search by username / full name (debounced)
+- Tag search by partial match
 - Recent search history (client-side)
+
+### Hashtags
+
+- Extracted and normalized from captions on the backend
+- Multikey index for fast tag search
+- Tag page with posts by hashtag (`/tags/:tag`)
+- Tag search endpoint with post counts
 
 ### Notifications
 
-- Slide-in Notifications panel
+- Slide-in Notifications panel (full-width on mobile)
 - Events: likes, comments, follows
-- Read / unread state (optional)
+- Read / unread state with unread badge
+- Clear all notifications
+- Paginated notification list
 
 ### Messages (Real-time)
 
-- Conversations list
-- Chat history (pagination)
+- Conversations list with unread badges
+- Chat history with cursor pagination
 - Real-time messaging via Socket.io
-- Optimistic send + delivery acknowledgement
+- Optimistic send with delivery acknowledgement
+- Delete conversation, mark as read
+- Virtualized message list (react-virtuoso)
+- Emoji picker
+
+### User Profiles
+
+- Public profile view by username
+- Own profile with edit modal
+- Edit profile (fullName, bio, website)
+- Avatar upload with image optimization
+- Posts grid on profile
+
+### Responsive Design
+
+- Desktop sidebar navigation (245px / collapsible to 72px)
+- Mobile bottom navigation (Home, Search, Create, Messages, Menu)
+- Mobile slide-out menu (Profile, Explore, Notifications, Logout)
+- All pages adapted for 375px+ screens
+- Post detail modal: full-screen on mobile, centered on desktop
 
 ## Documentation
 
-- docs/PLAN.md
-- docs/ARCHITECTURE.md
-- docs/SECURITY.md
-- docs/PERFORMANCE.md
-- docs/API_OVERVIEW.md
-- docs/EXPLANATIONS.md
+- [docs/PLAN.md](docs/PLAN.md) — Project plan and roadmap
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architecture and code structure
+- [docs/SECURITY.md](docs/SECURITY.md) — Security model and controls
+- [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — Performance and caching strategy
+- [docs/API_OVERVIEW.md](docs/API_OVERVIEW.md) — API endpoints reference
+- [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md) — Code walkthrough (Russian)
 
 ---
 
@@ -68,36 +92,37 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 
 ### Frontend
 
-- React + TypeScript
+- React 19 + TypeScript
 - Vite
 - Tailwind CSS
 - shadcn/ui (Radix UI)
-- TanStack Query (server-state caching)
+- TanStack Query v5 (server-state caching, pagination)
 - Zustand (UI/client state)
 - React Hook Form + Zod (forms + validation)
-- Socket.io client
+- Socket.io client (real-time messaging)
 - react-virtuoso (chat virtualization)
 - dayjs (date/time formatting)
+- emoji-picker-react
+- lucide-react (icons)
 
 ### Backend
 
 - Node.js + TypeScript
-- Express
+- Express 5
 - MongoDB + Mongoose
 - Zod validation
 - JWT (access token) + Refresh token (httpOnly cookie)
-- bcrypt
-- Socket.io
+- bcrypt (password hashing)
+- Socket.io (real-time messaging)
 - multer + sharp (image upload + optimization)
-- helmet, cors, express-rate-limit
+- helmet, cors
 
 ### Dev / Quality
 
 - ESLint + Prettier
 - Husky + lint-staged
-- Vitest
-- Supertest (API tests)
-- GitHub Actions CI (lint → test → build)
+- Vitest + Supertest (API tests)
+- GitHub Actions CI (lint -> test -> build)
 
 ---
 
@@ -105,44 +130,59 @@ It includes authentication, posts feed, likes/comments, user profiles, search, n
 
 ### Project Structure
 
-apps/
-client/ # React client
-server/ # Express server
+```
+ichgram/
+├── apps/
+│   ├── client/          # React frontend (Vite)
+│   └── server/          # Express backend (Node.js)
+├── docs/                # Documentation
+├── package.json         # Root workspace scripts
+├── pnpm-workspace.yaml  # Monorepo config
+└── eslint.config.cjs    # Global ESLint config
+```
 
 ### State management
 
-- **Server-state (API data):** TanStack Query
-- **UI state (overlays/modals):** Zustand
-- This keeps the app predictable and avoids storing API caches in Redux manually.
+- **Server-state (API data):** TanStack Query — caching, pagination, invalidation, optimistic updates
+- **UI state (overlays/modals):** Zustand — auth token, search/notification/create-post/mobile-menu overlays, chat active conversation
 
 ### Real-time chat
 
-- **REST API** for initial message history + pagination
-- **Socket.io** for real-time updates (new messages, typing, etc.)
+- **REST API** for message history + cursor pagination
+- **Socket.io** for real-time updates (new messages, conversation deletion)
 - MongoDB is the source of truth (no message loss on refresh)
+
+### Database models (9)
+
+User, Post, Comment, Like, CommentLike, Follow, Notification, Conversation, Message
 
 ---
 
 ## Security Decisions
 
 - Refresh token stored in **httpOnly cookie** (prevents JS token theft via XSS)
-- Short-lived access token
-- Strict CORS policy
-- Rate limiting on auth endpoints
-- Validation with Zod on API inputs
-- File upload restrictions (size/type) + sharp processing
+- Short-lived access token (15 min)
+- Strict CORS policy (`origin = CLIENT_ORIGIN`, `credentials = true`)
+- Validation with Zod on all API inputs
+- File upload restrictions (size/type whitelist) + sharp processing
+- Ownership checks on edit/delete (posts, comments, profile)
 
 ---
 
 ## Performance Decisions
 
-- Pagination/cursor-based loading for feed, comments and messages
-- MongoDB indexes on:
-  - posts (createdAt, authorId)
+- Cursor-based pagination for feed, comments, messages, notifications, tags
+- MongoDB indexes on all query-heavy fields:
+  - posts (createdAt, authorId+createdAt, hashtags)
   - likes (postId+userId unique)
+  - comment-likes (commentId+userId unique)
   - follows (followerId+followingId unique)
+  - comments (postId+createdAt)
   - messages (conversationId+createdAt)
-- React Query caching and invalidation strategy
+  - notifications (userId+createdAt)
+  - conversations (participantIds, participantIds+lastMessageAt)
+- TanStack Query caching with staleTime and query invalidation
+- Optimistic updates for likes and messages
 - Virtualized message list for large chats
 
 ---
@@ -157,29 +197,53 @@ server/ # Express server
 
 ### Environment variables
 
-Create env files based on templates:
+Create `apps/server/.env`:
 
-**apps/server/.env**
+```env
+NODE_ENV=development
 PORT=4000
 MONGO_URI=mongodb://localhost:27017/ichgram
-JWT_ACCESS_SECRET=...
-JWT_REFRESH_SECRET=...
-CLIENT_ORIGIN=localhost:5000
-
-**apps/client/.env**
-VITE_API_URL=http://localhost:4000
+JWT_ACCESS_SECRET=your-access-secret-min-32-chars
+JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
+CLIENT_ORIGIN=http://localhost:5173
+```
 
 ### Install
 
+```bash
 pnpm install
+```
+
+If native deps were skipped, run:
+
+```bash
+pnpm approve-builds
+```
 
 ### Run
 
 From the repo root:
 
-- `pnpm dev` (client + server)
-- `pnpm dev:client`
-- `pnpm dev:server`
+```bash
+pnpm dev          # client + server
+pnpm dev:client   # http://localhost:5173
+pnpm dev:server   # http://localhost:4000
+```
 
-If native deps were skipped, run:
-`pnpm approve-builds`
+### Build
+
+```bash
+pnpm build
+```
+
+### Test
+
+```bash
+pnpm test
+```
+
+### Lint
+
+```bash
+pnpm lint
+```

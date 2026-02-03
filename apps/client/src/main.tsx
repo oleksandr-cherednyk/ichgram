@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './app/App';
+import { ErrorBoundary } from './components/common';
+import { TooltipProvider } from './components/ui/tooltip';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -11,6 +13,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -25,7 +28,11 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
+        <ErrorBoundary>
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,

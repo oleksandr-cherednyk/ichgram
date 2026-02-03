@@ -1,9 +1,12 @@
 import { type Request, type Response } from 'express';
 
 import * as postService from '../services/post.service';
+import { createApiError } from '../utils';
+import { OBJECT_ID_REGEX } from '../validations/pagination';
 import type {
   CreatePostInput,
   FeedQuery,
+  HomeFeedQuery,
   PostIdParam,
   UpdatePostInput,
 } from '../validations';
@@ -21,13 +24,7 @@ export const createPost = async (
 
   // Image path is set by upload middleware
   if (!req.file?.path) {
-    res.status(400).json({
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Image file is required',
-      },
-    });
-    return;
+    throw createApiError(400, 'VALIDATION_ERROR', 'Image file is required');
   }
 
   const imageUrl = req.file.path;
@@ -45,14 +42,15 @@ export const getPost = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const post = await postService.getPostById(id);
+  const userId = req.userId;
+  const post = await postService.getPostById(id, userId);
 
   res.json({ post });
 };
 
 /**
  * PATCH /posts/:id
- * Update post caption (only owner can update)
+ * Update post caption and/or image (owner only)
  */
 export const updatePost = async (
   req: Request<PostIdParam, object, UpdatePostInput>,
@@ -61,8 +59,9 @@ export const updatePost = async (
   const { id } = req.params;
   const userId = req.userId!;
   const input = req.body;
+  const imageUrl = req.file?.path;
 
-  const post = await postService.updatePost(id, userId, input);
+  const post = await postService.updatePost(id, userId, input, imageUrl);
 
   res.json({ post });
 };
@@ -85,16 +84,20 @@ export const deletePost = async (
 
 /**
  * GET /posts/feed
- * Get home feed with cursor pagination
+ * Get home feed with random posts from followed users
  */
 export const getFeed = async (
-  req: Request<object, object, object, FeedQuery>,
+  req: Request<object, object, object, HomeFeedQuery>,
   res: Response,
 ): Promise<void> => {
   const userId = req.userId!;
-  const { cursor, limit } = req.query;
+  const { exclude, limit } = req.query;
 
-  const result = await postService.getFeed(userId, cursor, limit);
+  const excludeIds = exclude
+    ? exclude.split(',').filter((id) => OBJECT_ID_REGEX.test(id))
+    : [];
+
+  const result = await postService.getFeed(userId, excludeIds, limit);
 
   res.json(result);
 };
@@ -107,10 +110,22 @@ export const getExplorePosts = async (
   req: Request<object, object, object, FeedQuery>,
   res: Response,
 ): Promise<void> => {
-  const userId = req.userId!;
   const { cursor, limit } = req.query;
 
-  const result = await postService.getExplorePosts(userId, cursor, limit);
+  const result = await postService.getExplorePosts(cursor, limit);
 
   res.json(result);
+};
+
+/**
+ * GET /posts/top
+ * Get top 10 posts sorted by like count
+ */
+export const getTopPosts = async (
+  _req: Request,
+  res: Response,
+): Promise<void> => {
+  const posts = await postService.getTopPosts(10);
+
+  res.json({ data: posts });
 };

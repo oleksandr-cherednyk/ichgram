@@ -2,17 +2,19 @@ import {
   Compass,
   Heart,
   Home,
+  Menu,
   MessageCircle,
   PlusSquare,
   Search,
-  User,
 } from 'lucide-react';
 
 export type NavItem = {
-  to: string;
+  to?: string;
+  action?: 'create' | 'search' | 'notifications' | 'menu';
   label: string;
   icon: React.ReactNode;
   showOnMobile: boolean;
+  showOnDesktop?: boolean;
 };
 
 export const navItems: NavItem[] = [
@@ -23,7 +25,7 @@ export const navItems: NavItem[] = [
     showOnMobile: true,
   },
   {
-    to: '/search',
+    action: 'search',
     label: 'Search',
     icon: <Search className="h-6 w-6" />,
     showOnMobile: true,
@@ -32,30 +34,31 @@ export const navItems: NavItem[] = [
     to: '/explore',
     label: 'Explore',
     icon: <Compass className="h-6 w-6" />,
-    showOnMobile: true,
+    showOnMobile: false,
   },
   {
     to: '/messages',
     label: 'Messages',
     icon: <MessageCircle className="h-6 w-6" />,
-    showOnMobile: false,
+    showOnMobile: true,
   },
   {
-    to: '/notifications',
+    action: 'notifications',
     label: 'Notifications',
     icon: <Heart className="h-6 w-6" />,
     showOnMobile: false,
   },
   {
-    to: '/create',
+    action: 'create',
     label: 'Create',
     icon: <PlusSquare className="h-6 w-6" />,
     showOnMobile: true,
   },
   {
-    to: '/me',
-    label: 'Profile',
-    icon: <User className="h-6 w-6" />,
+    action: 'menu',
+    label: 'Menu',
+    icon: <Menu className="h-6 w-6" />,
     showOnMobile: true,
+    showOnDesktop: false,
   },
 ];

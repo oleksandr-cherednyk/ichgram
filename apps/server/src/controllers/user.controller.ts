@@ -1,10 +1,12 @@
 import { type Request, type Response } from 'express';
 
 import * as userService from '../services/user.service';
+import { createApiError } from '../utils';
 import type {
   UpdateProfileInput,
   UsernameParam,
   UserPostsQuery,
+  UserSearchQuery,
 } from '../validations';
 
 /**
@@ -45,13 +47,7 @@ export const updateAvatar = async (
   const userId = req.userId!;
 
   if (!req.file?.path) {
-    res.status(400).json({
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Image file is required',
-      },
-    });
-    return;
+    throw createApiError(400, 'VALIDATION_ERROR', 'Image file is required');
   }
 
   const avatarUrl = req.file.path;
@@ -63,13 +59,15 @@ export const updateAvatar = async (
 /**
  * GET /users/:username
  * Get user profile by username
+ * Includes isFollowing status if authenticated
  */
 export const getUser = async (
   req: Request<UsernameParam>,
   res: Response,
 ): Promise<void> => {
   const { username } = req.params;
-  const user = await userService.getUserByUsername(username);
+  const currentUserId = req.userId; // May be undefined if not authenticated
+  const user = await userService.getUserByUsername(username, currentUserId);
 
   res.json({ user });
 };
@@ -86,6 +84,21 @@ export const getUserPosts = async (
   const { cursor, limit } = req.query;
 
   const result = await userService.getUserPosts(username, cursor, limit);
+
+  res.json(result);
+};
+
+/**
+ * GET /users/search
+ * Search users by username or fullName
+ */
+export const searchUsers = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { q, cursor, limit } = req.query as unknown as UserSearchQuery;
+
+  const result = await userService.searchUsers(q, cursor, limit);
 
   res.json(result);
 };

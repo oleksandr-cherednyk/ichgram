@@ -4,7 +4,15 @@ import http from 'http';
 import { connectToDatabase, env, registerGracefulShutdown } from './config';
 import { createApp } from './app';
 import { errorHandler } from './middlewares';
-import { authRouter, postRouter, userRouter } from './routes';
+import {
+  authRouter,
+  chatRouter,
+  notificationRouter,
+  postRouter,
+  tagRouter,
+  userRouter,
+} from './routes';
+import { initializeSocket } from './sockets';
 
 // Bootstraps core infrastructure before mounting feature routes.
 const bootstrap = async (): Promise<void> => {
@@ -19,7 +27,10 @@ const bootstrap = async (): Promise<void> => {
 
   // API routes
   app.use('/api/auth', authRouter);
+  app.use('/api/conversations', chatRouter);
+  app.use('/api/notifications', notificationRouter);
   app.use('/api/posts', postRouter);
+  app.use('/api/tags', tagRouter);
   app.use('/api/users', userRouter);
 
   // Serve uploaded images statically
@@ -29,6 +40,7 @@ const bootstrap = async (): Promise<void> => {
   app.use(errorHandler);
 
   const server = http.createServer(app);
+  initializeSocket(server);
 
   server.listen(env.PORT, () => {
     console.log(`Server listening on port ${env.PORT}.`);

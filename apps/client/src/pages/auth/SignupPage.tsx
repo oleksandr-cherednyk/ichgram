@@ -6,8 +6,15 @@ import { z } from 'zod';
 
 import logo from '../../assets/logo/logo.png';
 import { Button } from '../../components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../components/ui/form';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { apiRequest } from '../../lib/api';
 import { mapApiErrorsToForm } from '../../lib/form-errors';
 import { type ApiError } from '../../types/api';
@@ -73,83 +80,97 @@ export const SignupPage = () => {
                 Sign up to see photos and videos from your friends.
               </p>
             </div>
-            <form
-              className="space-y-2 mt-6"
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
-              {formError ? (
-                <div className="rounded border border-[#DBDBDB] bg-[#fafafa] px-3 py-2 text-xs text-[#737373]">
-                  {formError}
-                </div>
-              ) : null}
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="Email"
-                  {...form.register('email')}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-fullname">Full name</Label>
-                <Input
-                  id="signup-fullname"
-                  type="text"
-                  autoComplete="name"
-                  placeholder="Full name"
-                  {...form.register('fullName')}
-                />
-                {form.formState.errors.fullName && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.fullName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-username">Username</Label>
-                <Input
-                  id="signup-username"
-                  type="text"
-                  autoComplete="username"
-                  placeholder="Username"
-                  {...form.register('username')}
-                />
-                {form.formState.errors.username && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.username.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Password"
-                  {...form.register('password')}
-                />
-                {form.formState.errors.password && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
-              <Button
-                type="submit"
-                className="w-full mt-4"
-                disabled={form.formState.isSubmitting}
+            <Form {...form}>
+              <form
+                className="space-y-2 mt-6"
+                onSubmit={form.handleSubmit(onSubmit)}
               >
-                {form.formState.isSubmitting ? 'Signing up...' : 'Sign up'}
-              </Button>
-            </form>
+                {formError ? (
+                  <div className="rounded border border-[#DBDBDB] bg-[#fafafa] px-3 py-2 text-xs text-[#737373]">
+                    {formError}
+                  </div>
+                ) : null}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Email"
+                          autoComplete="email"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Full name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Full name"
+                          autoComplete="name"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Username</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Username"
+                          autoComplete="username"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Password"
+                          autoComplete="new-password"
+                          type="password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full mt-4"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? 'Signing up...' : 'Sign up'}
+                </Button>
+              </form>
+            </Form>
           </div>
           <div className="mt-4 border border-[#DBDBDB] px-6 py-6 text-center text-sm">
             Already have an account?{' '}

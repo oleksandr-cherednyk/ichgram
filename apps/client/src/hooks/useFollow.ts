@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 import { apiRequest } from '../lib/api';
 
@@ -26,6 +27,9 @@ export const useFollow = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', username] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
     },
+    onError: () => {
+      toast.error('Failed to follow user');
+    },
   });
 };
 
@@ -44,6 +48,9 @@ export const useUnfollow = () => {
       // Invalidate profile queries to refresh follower counts
       queryClient.invalidateQueries({ queryKey: ['profile', username] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+    },
+    onError: () => {
+      toast.error('Failed to unfollow user');
     },
   });
 };

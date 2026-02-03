@@ -1,6 +1,16 @@
 import { useAuthStore } from '../stores/auth';
 import { type ApiError, type ApiErrorResponse } from '../types/api';
 
+export const buildCursorUrl = (
+  path: string,
+  cursor?: string | null,
+): string => {
+  if (!cursor) return path;
+  const params = new URLSearchParams();
+  params.set('cursor', cursor);
+  return `${path}?${params}`;
+};
+
 type ApiRequestError = {
   status: number;
   error: ApiError;
@@ -23,7 +33,7 @@ const buildError = (status: number, error?: ApiError): ApiRequestError => ({
 // Prevent multiple simultaneous refresh requests
 let refreshPromise: Promise<string | null> | null = null;
 
-const refreshAccessToken = async (): Promise<string | null> => {
+export const refreshAccessToken = async (): Promise<string | null> => {
   // If already refreshing, wait for that request
   if (refreshPromise) {
     return refreshPromise;
@@ -52,7 +62,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
   return refreshPromise;
 };
 
-const makeRequest = async <T>(
+const makeRequest = async (
   input: string,
   init?: RequestInit,
   token?: string | null,
@@ -77,6 +87,26 @@ const makeRequest = async <T>(
   });
 };
 
+const makeUploadRequest = async (
+  input: string,
+  method: string,
+  body: FormData,
+  token?: string | null,
+): Promise<Response> => {
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return fetch(`/api${input}`, {
+    method,
+    credentials: 'include',
+    headers,
+    body,
+  });
+};
+
 export const apiRequest = async <T>(
   input: string,
   init?: RequestInit,
@@ -96,6 +126,38 @@ export const apiRequest = async <T>(
       response = await makeRequest<T>(input, init, newToken);
     } else {
       // Refresh failed - clear auth state (triggers redirect to /login)
+      clear();
+    }
+  }
+
+  const text = await response.text();
+  const data = text ? (JSON.parse(text) as unknown) : null;
+
+  if (!response.ok) {
+    const parsedError = (data as ApiErrorResponse | null)?.error;
+    throw buildError(response.status, parsedError);
+  }
+
+  return data as T;
+};
+
+export const apiUpload = async <T>(
+  input: string,
+  method: string,
+  body: FormData,
+): Promise<T> => {
+  const { accessToken, setAccessToken, clear } = useAuthStore.getState();
+
+  let response = await makeUploadRequest(input, method, body, accessToken);
+
+  // If 401, try to refresh and retry
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+
+    if (newToken) {
+      setAccessToken(newToken);
+      response = await makeUploadRequest(input, method, body, newToken);
+    } else {
       clear();
     }
   }

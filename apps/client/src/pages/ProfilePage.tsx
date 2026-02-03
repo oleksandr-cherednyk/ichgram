@@ -1,11 +1,18 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { LoadingScreen } from '../components/common';
-import { ProfileGrid, ProfileHeader } from '../components/profile';
+import {
+  PostViewModal,
+  ProfileGrid,
+  ProfileHeader,
+  ProfileSkeleton,
+} from '../components/profile';
 import { useFollow, useUnfollow, useUser, useUserPosts } from '../hooks';
 
 export const ProfilePage = () => {
   const { username } = useParams<{ username: string }>();
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const { data: user, isLoading, error } = useUser(username ?? '');
   const follow = useFollow();
@@ -20,10 +27,6 @@ export const ProfilePage = () => {
 
   const posts = postsData?.pages.flatMap((page) => page.data) ?? [];
 
-  // TODO: Get actual following status from API
-  // For now, we'll use a simple toggle based on mutation state
-  const isFollowing = false;
-
   const handleFollow = () => {
     if (username) follow.mutate(username);
   };
@@ -33,7 +36,7 @@ export const ProfilePage = () => {
   };
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <ProfileSkeleton />;
   }
 
   if (error || !user) {
@@ -45,24 +48,28 @@ export const ProfilePage = () => {
       <ProfileHeader
         user={user}
         isOwnProfile={false}
-        isFollowing={isFollowing}
+        isFollowing={user.isFollowing}
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
         isFollowLoading={follow.isPending || unfollow.isPending}
       />
 
-      {/* Divider */}
-      <div className="border-t border-[#DBDBDB]" />
-
       {/* Posts Grid */}
       <section className="py-4">
         <ProfileGrid
           posts={posts}
+          onPostClick={setSelectedPostId}
           onLoadMore={() => fetchNextPage()}
           hasMore={hasNextPage}
           isLoading={isFetchingNextPage}
         />
       </section>
+
+      {/* Post Modal */}
+      <PostViewModal
+        postId={selectedPostId}
+        onClose={() => setSelectedPostId(null)}
+      />
     </div>
   );
 };

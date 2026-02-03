@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { paginationQuerySchema } from './pagination';
+import { objectIdSchema, paginationQuerySchema } from './pagination';
 
 // Instagram caption max length
 const MAX_CAPTION_LENGTH = 2200;
@@ -17,7 +17,7 @@ export const createPostSchema = z.object({
  * Validation schema for updating a post
  */
 export const updatePostSchema = z.object({
-  caption: z.string().max(MAX_CAPTION_LENGTH),
+  caption: z.string().max(MAX_CAPTION_LENGTH).optional(),
 });
 
 /**
@@ -25,7 +25,7 @@ export const updatePostSchema = z.object({
  * MongoDB ObjectId is 24 hex characters
  */
 export const postIdParamSchema = z.object({
-  id: z.string().regex(/^[0-9a-f]{24}$/, 'Invalid post ID format'),
+  id: objectIdSchema('post ID'),
 });
 
 /**
@@ -34,8 +34,18 @@ export const postIdParamSchema = z.object({
  */
 export const feedQuerySchema = paginationQuerySchema;
 
+/**
+ * Validation schema for home feed query params
+ * Uses exclude-based pagination for random sampling
+ */
+export const homeFeedQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(50).optional(),
+  exclude: z.string().optional(),
+});
+
 // Export types
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 export type PostIdParam = z.infer<typeof postIdParamSchema>;
 export type FeedQuery = z.infer<typeof feedQuerySchema>;
+export type HomeFeedQuery = z.infer<typeof homeFeedQuerySchema>;

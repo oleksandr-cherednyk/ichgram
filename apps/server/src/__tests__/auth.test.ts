@@ -1,78 +1,117 @@
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { createApp } from '../app';
-import { connectToDatabase } from '../config';
-import { errorHandler } from '../middlewares';
-import { UserModel } from '../models';
-import { authRouter } from '../routes';
+import { buildTestApp } from './helpers/app';
+import { registerAndLogin } from './helpers/auth';
+import { setupTestDb } from './helpers/setup';
 
-const buildTestApp = () => {
-  const app = createApp();
+const app = buildTestApp();
 
-  app.use('/api/auth', authRouter);
-  app.use(errorHandler);
-
-  return app;
-};
-
-describe('auth flow (smoke)', () => {
-  const app = buildTestApp();
-  const agent = request.agent(app);
-
-  beforeAll(async () => {
-    await connectToDatabase();
-  });
-
-  beforeEach(async () => {
-    await UserModel.deleteMany({});
-  });
-
-  afterAll(async () => {
-    await UserModel.deleteMany({});
-    await UserModel.db.close();
-  });
+describe('auth flow', () => {
+  setupTestDb();
 
   it('register -> login -> me -> refresh -> logout', async () => {
-    const registerPayload = {
-      email: 'user@example.com',
-      fullName: 'Test User',
-      username: 'testuser',
-      password: 'password123',
-    };
+    const agent = request.agent(app);
 
-    const registerResponse = await agent
+    const registerRes = await agent
       .post('/api/auth/register')
-      .send(registerPayload)
+      .send({
+        email: 'user@example.com',
+        fullName: 'Test User',
+        username: 'testuser',
+        password: 'password123',
+      })
       .expect(201);
 
-    expect(registerResponse.body.user.email).toBe(registerPayload.email);
-    expect(registerResponse.body.accessToken).toBeTypeOf('string');
+    expect(registerRes.body.user.email).toBe('user@example.com');
+    expect(registerRes.body.accessToken).toBeTypeOf('string');
 
-    const loginResponse = await agent
+    const loginRes = await agent
       .post('/api/auth/login')
-      .send({
-        email: registerPayload.email,
-        password: registerPayload.password,
-      })
+      .send({ email: 'user@example.com', password: 'password123' })
       .expect(200);
 
-    const accessToken = loginResponse.body.accessToken as string;
+    const accessToken = loginRes.body.accessToken as string;
 
-    const meResponse = await agent
+    const meRes = await agent
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    expect(meResponse.body.user.username).toBe(registerPayload.username);
+    expect(meRes.body.user.username).toBe('testuser');
 
-    const refreshResponse = await agent
+    const refreshRes = await agent
       .post('/api/auth/refresh')
       .send({})
       .expect(200);
-
-    expect(refreshResponse.body.accessToken).toBeTypeOf('string');
+    expect(refreshRes.body.accessToken).toBeTypeOf('string');
 
     await agent.post('/api/auth/logout').expect(200);
+  });
+
+  it('rejects duplicate email', async () => {
+    await registerAndLogin(app, { email: 'dup@test.com', username: 'first' });
+
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'dup@test.com',
+      username: 'second',
+      fullName: 'Dup',
+      password: 'password123',
+    });
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('rejects duplicate username', async () => {
+    await registerAndLogin(app, {
+      email: 'a@test.com',
+      username: 'taken',
+    });
+
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'b@test.com',
+      username: 'taken',
+      fullName: 'Dup',
+      password: 'password123',
+    });
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('rejects wrong password on login', async () => {
+    await registerAndLogin(app, {
+      email: 'wrong@test.com',
+      username: 'wrongpw',
+    });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'wrong@test.com', password: 'badpassword' });
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('refresh with no cookie returns 401', async () => {
+    const res = await request(app).post('/api/auth/refresh').send({});
+    expect(res.status).toBe(401);
+  });
+
+  it('double logout does not crash', async () => {
+    const agent = request.agent(app);
+
+    await agent
+      .post('/api/auth/register')
+      .send({
+        email: 'dbl@test.com',
+        username: 'dbllogout',
+        fullName: 'Dbl',
+        password: 'password123',
+      })
+      .expect(201);
+
+    await agent.post('/api/auth/logout').expect(200);
+    // Second logout should not 500
+    const res = await agent.post('/api/auth/logout');
+    expect(res.status).toBeLessThan(500);
   });
 });

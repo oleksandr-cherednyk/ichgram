@@ -15,6 +15,7 @@ const userSchema = new Schema(
     passwordHash: { type: String, required: true },
     avatarUrl: { type: String },
     bio: { type: String, maxlength: 160 },
+    website: { type: String, maxlength: 200, trim: true },
   },
   { timestamps: true },
 );

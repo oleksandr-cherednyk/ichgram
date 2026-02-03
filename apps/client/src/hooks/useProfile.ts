@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-import { apiRequest } from '../lib/api';
+import { apiRequest, apiUpload } from '../lib/api';
 import type { UpdateProfileInput, UserProfile } from '../types/user';
 
 type ProfileResponse = {
@@ -45,6 +46,34 @@ export const useUpdateProfile = () => {
     onSuccess: (data) => {
       queryClient.setQueryData(['profile', 'me'], data);
       queryClient.setQueryData(['profile', data.user.username], data);
+      toast.success('Profile updated');
+    },
+    onError: () => {
+      toast.error('Failed to update profile');
+    },
+  });
+};
+
+/**
+ * Hook to upload a new avatar
+ */
+export const useUpdateAvatar = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      return apiUpload<ProfileResponse>('/users/me/avatar', 'POST', formData);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['profile', 'me'], data);
+      queryClient.setQueryData(['profile', data.user.username], data);
+      toast.success('Avatar updated');
+    },
+    onError: () => {
+      toast.error('Failed to upload avatar');
     },
   });
 };

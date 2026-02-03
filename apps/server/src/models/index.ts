@@ -1,4 +1,5 @@
 export * from './comment.model';
+export * from './comment-like.model';
 export * from './conversation.model';
 export * from './follow.model';
 export * from './like.model';
