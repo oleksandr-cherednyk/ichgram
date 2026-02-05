@@ -76,13 +76,17 @@ export const ProfileHeader = ({
 
   return (
     <header className="flex flex-col gap-6 pb-8 md:flex-row md:items-start md:gap-[88px]">
-      {/* Avatar */}
-      <UserAvatar
-        src={user.avatarUrl}
-        alt={user.username}
-        size="2xl"
-        className="mx-auto md:mx-0 md:h-36 md:w-36"
-      />
+      {/* Avatar with gradient ring */}
+      <div className="mx-auto shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-1 md:mx-0">
+        <div className="rounded-full bg-white p-1">
+          <UserAvatar
+            src={user.avatarUrl}
+            alt={user.username}
+            size="2xl"
+            className="md:h-36 md:w-36"
+          />
+        </div>
+      </div>
 
       {/* Profile Info */}
       <div className="flex-1 text-center md:text-left">
