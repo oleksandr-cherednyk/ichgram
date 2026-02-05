@@ -27,12 +27,17 @@ export const FeedCard = ({ post, onOpenPost }: FeedCardProps) => {
     <Card className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-[#DBDBDB] bg-white shadow-none">
       {/* Header: avatar, username, time, follow link */}
       <CardHeader className="flex-row items-center gap-2 space-y-0 px-0 py-3">
-        <Link to={`/profile/${post.author.username}`}>
-          <UserAvatar
-            src={post.author.avatarUrl}
-            alt={post.author.username}
-            size="sm"
-          />
+        <Link
+          to={`/profile/${post.author.username}`}
+          className="shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]"
+        >
+          <div className="rounded-full bg-white p-[2px]">
+            <UserAvatar
+              src={post.author.avatarUrl}
+              alt={post.author.username}
+              size="sm"
+            />
+          </div>
         </Link>
         <div className="flex min-w-0 items-center gap-1">
           <Link
