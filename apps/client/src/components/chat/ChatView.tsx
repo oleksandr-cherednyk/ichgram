@@ -188,7 +188,10 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
       </div>
 
       {/* Message input */}
-      <form onSubmit={handleSubmit} className="flex-shrink-0 px-4 py-3">
+      <form
+        onSubmit={handleSubmit}
+        className="sticky bottom-0 flex-shrink-0 border-t border-zinc-100 bg-white px-4 py-3 md:border-t-0"
+      >
         <div className="flex w-full items-center gap-3 rounded-full border border-zinc-200 px-4 py-2 md:px-16">
           <input
             value={text}
