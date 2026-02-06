@@ -101,7 +101,6 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 - React Hook Form + Zod (forms + validation)
 - Socket.io client (real-time messaging)
 - react-virtuoso (chat virtualization)
-- dayjs (date/time formatting)
 - emoji-picker-react
 - lucide-react (icons)
 
