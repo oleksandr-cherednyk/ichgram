@@ -17,7 +17,7 @@ const formatTime = (dateString: string): string => {
 export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => (
   <div
     className={cn(
-      'max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed',
+      'max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed md:max-w-[75%]',
       isOwn ? 'bg-[#4D00FF] text-white' : 'bg-[#EFEFEF] text-zinc-900',
     )}
   >

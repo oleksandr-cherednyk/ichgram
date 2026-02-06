@@ -28,7 +28,7 @@ export const ConversationList = () => {
   return (
     <div className="flex h-full flex-col">
       {/* My username header */}
-      <div className="px-5 py-4">
+      <div className="px-4 py-3 md:px-5 md:py-4">
         <h2 className="text-lg font-bold text-[#262626]">
           {profile?.username ?? 'Messages'}
         </h2>
@@ -77,14 +77,15 @@ export const ConversationList = () => {
                     }
                   }}
                   className={cn(
-                    'flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-50',
+                    'group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-50',
                     activeConversationId === conversation.id && 'bg-zinc-50',
                   )}
                 >
                   <UserAvatar
                     src={participant?.avatarUrl}
                     alt={participant?.username}
-                    size="xl"
+                    size="lg"
+                    className="md:h-14 md:w-14"
                   />
 
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -117,7 +118,7 @@ export const ConversationList = () => {
                               conversationId: conversation.id,
                             });
                           }}
-                          className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500"
+                          className="rounded p-1 text-zinc-400 opacity-0 transition-colors hover:bg-zinc-100 hover:text-red-500 group-hover:opacity-100 md:opacity-100"
                           aria-label="Delete conversation"
                         >
                           <Trash2 className="h-4 w-4" />

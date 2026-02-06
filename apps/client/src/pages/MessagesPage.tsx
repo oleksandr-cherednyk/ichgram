@@ -6,7 +6,7 @@ export const MessagesPage = () => {
   const { activeConversationId, setActiveConversation } = useChatStore();
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden md:flex-row">
+    <div className="absolute inset-0 bottom-14 flex flex-col overflow-hidden md:bottom-0 md:flex-row">
       {/* Left panel - conversation list */}
       <div
         className={cn(

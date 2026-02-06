@@ -82,12 +82,13 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
   };
 
   const header = (
-    <div className="flex flex-col items-center py-8">
+    <div className="flex flex-col items-center py-6 md:py-8">
       {/* Participant avatar */}
       <UserAvatar
         src={participant?.avatarUrl}
         alt={participant?.username}
-        size="2xl"
+        size="xl"
+        className="md:h-20 md:w-20"
       />
 
       {/* Username */}
@@ -129,7 +130,8 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
         <UserAvatar
           src={participant?.avatarUrl}
           alt={participant?.username}
-          size="md"
+          size="sm"
+          className="md:h-10 md:w-10"
         />
 
         <span className="truncate text-sm font-bold text-[#262626]">
@@ -166,7 +168,7 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
                 : participant?.username;
 
               return (
-                <div className="px-4 py-1">
+                <div className="px-3 py-1 md:px-4">
                   <div
                     className={`flex items-start gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
                   >
@@ -187,7 +189,7 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
 
       {/* Message input */}
       <form onSubmit={handleSubmit} className="flex-shrink-0 px-4 py-3">
-        <div className="flex w-full items-center gap-3 rounded-full border border-zinc-200 px-16 py-2">
+        <div className="flex w-full items-center gap-3 rounded-full border border-zinc-200 px-4 py-2 md:px-16">
           <input
             value={text}
             onChange={(event) => setText(event.target.value)}
