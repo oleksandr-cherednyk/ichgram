@@ -75,6 +75,7 @@ export const ResetPage = () => {
             <Form {...form}>
               <form
                 className="space-y-2 mt-6"
+                noValidate
                 onSubmit={form.handleSubmit(onSubmit)}
               >
                 {formError ? (

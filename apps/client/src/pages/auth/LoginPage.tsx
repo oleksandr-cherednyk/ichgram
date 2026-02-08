@@ -75,17 +75,18 @@ export const LoginPage = () => {
         </div>
 
         <div className="w-full md:w-6/13 pt-2 max-w-md">
-          <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-4 flex flex-col">
+          <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-8 flex flex-col">
             <div className="text-center">
               <img
                 src={logo}
                 alt="ICHGRAM"
-                className="mx-auto h-34 w-auto object-contain"
+                className="mx-auto w-[190px] h-[106px] object-contain"
               />
             </div>
             <Form {...form}>
               <form
                 className="space-y-2"
+                noValidate
                 onSubmit={form.handleSubmit(onSubmit)}
               >
                 {formError ? (
@@ -142,10 +143,10 @@ export const LoginPage = () => {
             </Form>
             <div className="my-7 flex items-center gap-4 text-xs uppercase text-zinc-400">
               <span className="h-px flex-1 bg-zinc-200" />
-              <span>or</span>
+              <span className="font-semibold">or</span>
               <span className="h-px flex-1 bg-zinc-200" />
             </div>
-            <div className="text-center mt-10">
+            <div className="text-center mt-14">
               <Link
                 className="text-sm text-[#00376B] hover:text-zinc-900"
                 to="/reset"

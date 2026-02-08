@@ -67,22 +67,23 @@ export const SignupPage = () => {
 
   return (
     <section className="flex min-h-screen pt-32 justify-center text-zinc-900">
-      <div className="mx-auto flex p-2 flex-col gap-8 max-w-full h-max">
+      <div className="max-w-[288px] mx-auto flex p-2 flex-col gap-8 max-w-full h-max">
         <div className="w-full pt-2 max-w-md">
           <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-4 flex flex-col">
             <div className="text-center">
               <img
                 src={logo}
                 alt="ICHGRAM"
-                className="mx-auto h-34 w-auto object-contain"
+                className="max-w-[288px] mx-auto w-[190px] h-[106px] object-contain"
               />
-              <p className="mt-3 text-sm text-zinc-500">
+              <p className="mt-3 text-[16px] font-semibold text-[#737373] max-w-[288px] mx-auto">
                 Sign up to see photos and videos from your friends.
               </p>
             </div>
             <Form {...form}>
               <form
                 className="space-y-2 mt-6"
+                noValidate
                 onSubmit={form.handleSubmit(onSubmit)}
               >
                 {formError ? (
@@ -162,6 +163,28 @@ export const SignupPage = () => {
                     </FormItem>
                   )}
                 />
+                <p className="text-xs text-center text-[#737373] mt-4 max-w-[288px] mx-auto">
+                  People who use our service may have uploaded your contact
+                  information to Instagram.{' '}
+                  <a href="#" className="text-[#00376B]">
+                    Learn More
+                  </a>
+                </p>
+                <p className="text-xs text-center text-[#737373] mt-2 max-w-[288px] mx-auto">
+                  By signing up, you agree to our{' '}
+                  <a href="#" className="text-[#00376B]">
+                    Terms
+                  </a>
+                  ,{' '}
+                  <a href="#" className="text-[#00376B]">
+                    Privacy Policy
+                  </a>{' '}
+                  and{' '}
+                  <a href="#" className="text-[#00376B]">
+                    Cookies Policy
+                  </a>
+                  .
+                </p>
                 <Button
                   type="submit"
                   className="w-full mt-4"
@@ -173,7 +196,7 @@ export const SignupPage = () => {
             </Form>
           </div>
           <div className="mt-4 border border-[#DBDBDB] px-6 py-6 text-center text-sm">
-            Already have an account?{' '}
+            Have an account?{' '}
             <Link className="font-semibold text-[#0095F6]" to="/login">
               Log in
             </Link>
