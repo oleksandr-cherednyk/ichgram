@@ -74,9 +74,9 @@ export const likeComment = async (
   const userId = req.userId!;
   const { commentId } = req.params;
 
-  const result = await commentService.likeComment(userId, commentId);
+  const liked = await commentService.likeComment(userId, commentId);
 
-  res.json(result);
+  res.json({ liked });
 };
 
 /**
@@ -90,7 +90,7 @@ export const unlikeComment = async (
   const userId = req.userId!;
   const { commentId } = req.params;
 
-  const result = await commentService.unlikeComment(userId, commentId);
+  const liked = await commentService.unlikeComment(userId, commentId);
 
-  res.json(result);
+  res.json({ liked });
 };

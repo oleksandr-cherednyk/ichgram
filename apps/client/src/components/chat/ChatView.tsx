@@ -1,5 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Virtuoso } from 'react-virtuoso';
 
@@ -8,12 +7,13 @@ import {
   useMarkConversationRead,
   useMessages,
   useProfile,
-  useSendMessage,
 } from '../../hooks';
 import { getOtherParticipant } from '../../lib/utils';
 import { useChatStore } from '../../stores/chat';
 import { Spinner } from '../ui/spinner';
 import { UserAvatar } from '../ui/user-avatar';
+import { ChatHeader } from './ChatHeader';
+import { ChatInput } from './ChatInput';
 import { MessageBubble } from './MessageBubble';
 
 type ChatViewProps = {
@@ -40,8 +40,6 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useMessages(conversationId);
   const { mutate: markRead } = useMarkConversationRead();
-  const sendMessage = useSendMessage();
-  const [text, setText] = useState('');
 
   const conversations =
     conversationData?.pages.flatMap((page) => page.data) ?? [];
@@ -58,21 +56,6 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
   useEffect(() => {
     markRead({ conversationId });
   }, [conversationId, markRead]);
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = text.trim();
-    if (!trimmed) return;
-
-    sendMessage.mutate(
-      { conversationId, text: trimmed },
-      {
-        onSuccess: () => {
-          setText('');
-        },
-      },
-    );
-  };
 
   const handleBack = () => {
     if (onBack) {
@@ -121,25 +104,11 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       {/* Chat header */}
-      <div className="flex flex-shrink-0 items-center gap-3 border-b border-zinc-200 px-4 py-3">
-        <button
-          onClick={handleBack}
-          className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 md:hidden"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-
-        <UserAvatar
-          src={participant?.avatarUrl}
-          alt={participant?.username}
-          size="sm"
-          className="md:h-10 md:w-10"
-        />
-
-        <span className="truncate text-sm font-bold text-[#262626]">
-          {participant?.username ?? 'Conversation'}
-        </span>
-      </div>
+      <ChatHeader
+        username={participant?.username}
+        avatarUrl={participant?.avatarUrl}
+        onBack={handleBack}
+      />
 
       {/* Messages area */}
       <div className="min-h-0 flex-1 overflow-hidden">
@@ -190,26 +159,7 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
       </div>
 
       {/* Message input */}
-      <form
-        onSubmit={handleSubmit}
-        className="sticky bottom-0 flex-shrink-0 border-t border-zinc-100 bg-white px-4 py-3 md:border-t-0"
-      >
-        <div className="flex w-full items-center gap-3 rounded-full border border-zinc-200 px-4 py-2 md:px-16">
-          <input
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder="Write message..."
-            className="flex-1 border-none bg-transparent text-sm outline-none placeholder:text-zinc-400"
-          />
-          <button
-            type="submit"
-            disabled={!text.trim() || sendMessage.isPending}
-            className="text-sm font-semibold text-[#4D00FF] hover:text-[#3D00CC] disabled:opacity-50"
-          >
-            Send
-          </button>
-        </div>
-      </form>
+      <ChatInput conversationId={conversationId} />
     </div>
   );
 };

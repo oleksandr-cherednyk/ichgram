@@ -6,4 +6,5 @@ export * from './LikeButton';
 export * from './PostActionsModal';
 export * from './PostCardSkeleton';
 export * from './PostContent';
+export * from './PostFormSidebar';
 export * from './PostDetailModal';

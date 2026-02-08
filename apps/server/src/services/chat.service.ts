@@ -364,16 +364,15 @@ export const getMessages = async (
   )?.date;
 
   const query: Record<string, unknown> = { conversationId };
+  const createdAtFilter: Record<string, unknown> = {};
 
-  // Only show messages after user's clearedAt
-  if (userClearedAt && cursor) {
-    query.createdAt = { $lt: new Date(cursor.createdAt), $gt: userClearedAt };
+  if (userClearedAt) createdAtFilter.$gt = userClearedAt;
+  if (cursor) {
+    createdAtFilter.$lt = new Date(cursor.createdAt);
     query._id = { $ne: cursor.id };
-  } else if (userClearedAt) {
-    query.createdAt = { $gt: userClearedAt };
-  } else if (cursor) {
-    query.createdAt = { $lt: new Date(cursor.createdAt) };
-    query._id = { $ne: cursor.id };
+  }
+  if (Object.keys(createdAtFilter).length > 0) {
+    query.createdAt = createdAtFilter;
   }
 
   const messages = await MessageModel.find(query)
@@ -451,7 +450,7 @@ export const sendMessage = async (
   return formatMessage(populated as unknown as PopulatedMessageDoc);
 };
 
-export const getConversationById = async (
+const getConversationById = async (
   id: string,
 ): Promise<PopulatedConversationDoc | null> => {
   return ConversationModel.findById(id)

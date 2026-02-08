@@ -1,9 +1,8 @@
-import { Types } from 'mongoose';
-
 import { PostModel } from '../models';
 import {
   decodeCursor,
   encodeCursor,
+  escapeRegex,
   parseLimit,
   type PaginationResult,
 } from '../utils';
@@ -44,8 +43,7 @@ export const searchTags = async (
 ): Promise<{ data: SearchTagItem[] }> => {
   const limit = parseLimit(limitParam);
 
-  // Escape special regex characters
-  const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedQuery = escapeRegex(searchQuery);
 
   // Aggregation: unwind hashtags, filter by regex, group and count
   const results = await PostModel.aggregate<{
@@ -108,12 +106,12 @@ export const getPostsByTag = async (
   const query: {
     hashtags: string;
     createdAt?: { $lt: Date };
-    _id?: { $ne: Types.ObjectId };
+    _id?: { $ne: string };
   } = { hashtags: normalizedTag };
 
   if (cursor) {
     query.createdAt = { $lt: new Date(cursor.createdAt) };
-    query._id = { $ne: new Types.ObjectId(cursor.id) };
+    query._id = { $ne: cursor.id };
   }
 
   // Fetch posts

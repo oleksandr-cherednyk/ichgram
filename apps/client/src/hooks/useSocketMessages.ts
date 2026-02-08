@@ -29,6 +29,7 @@ export const useSocketMessages = () => {
     const handleMessage = (payload: { message: Message }) => {
       const { message } = payload;
 
+      // Add message to cache (if conversation was previously loaded)
       queryClient.setQueryData<{
         pages: MessagesResponse[];
         pageParams: (string | null)[];
@@ -42,9 +43,6 @@ export const useSocketMessages = () => {
           ),
         };
       });
-
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
 
       if (activeConversationId === message.conversationId) {
         markReadRef.current.mutate({ conversationId: message.conversationId });
@@ -65,34 +63,39 @@ export const useSocketMessages = () => {
             })),
           };
         });
-        return;
+      } else {
+        queryClient.setQueryData<UnreadMessageCountResponse>(
+          ['messages', 'unread-count'],
+          (old) => ({ count: (old?.count ?? 0) + 1 }),
+        );
+
+        queryClient.setQueryData<{
+          pages: ConversationsResponse[];
+          pageParams: (string | null)[];
+        }>(['conversations'], (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((conversation) =>
+                conversation.id === message.conversationId
+                  ? {
+                      ...conversation,
+                      unreadCount: (conversation.unreadCount ?? 0) + 1,
+                    }
+                  : conversation,
+              ),
+            })),
+          };
+        });
       }
 
-      queryClient.setQueryData<UnreadMessageCountResponse>(
-        ['messages', 'unread-count'],
-        (old) => ({ count: (old?.count ?? 0) + 1 }),
-      );
-
-      queryClient.setQueryData<{
-        pages: ConversationsResponse[];
-        pageParams: (string | null)[];
-      }>(['conversations'], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((conversation) =>
-              conversation.id === message.conversationId
-                ? {
-                    ...conversation,
-                    unreadCount: (conversation.unreadCount ?? 0) + 1,
-                  }
-                : conversation,
-            ),
-          })),
-        };
-      });
+      // Invalidate AFTER setQueryData — setQueryData's internal reducer
+      // clears isInvalidated, so invalidation must come last to ensure
+      // a background refetch fetches the full server state.
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
     };
 
     const handleConversationDeleted = (payload: { conversationId: string }) => {

@@ -7,22 +7,39 @@ import {
   ProfileHeader,
   ProfileSkeleton,
 } from '../components/profile';
-import { useFollow, useUnfollow, useUser, useUserPosts } from '../hooks';
+import {
+  useFollow,
+  useLogout,
+  useProfile,
+  useUnfollow,
+  useUser,
+  useUserPosts,
+} from '../hooks';
 
 export const ProfilePage = () => {
   const { username } = useParams<{ username: string }>();
+  const isOwnProfile = !username;
+
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  const { data: user, isLoading, error } = useUser(username ?? '');
+  const profileQuery = useProfile();
+  const userQuery = useUser(username ?? '');
+  const logout = useLogout();
   const follow = useFollow();
   const unfollow = useUnfollow();
+
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = isOwnProfile ? profileQuery : userQuery;
 
   const {
     data: postsData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserPosts(username ?? '');
+  } = useUserPosts(user?.username ?? '');
 
   const posts = postsData?.pages.flatMap((page) => page.data) ?? [];
 
@@ -39,6 +56,20 @@ export const ProfilePage = () => {
   }
 
   if (error || !user) {
+    if (isOwnProfile) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+          <p className="text-zinc-500">Failed to load profile</p>
+          <button
+            onClick={logout}
+            className="text-sm text-[#0095F6] hover:underline"
+          >
+            Log out
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-zinc-500">User not found</p>
@@ -50,11 +81,13 @@ export const ProfilePage = () => {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <ProfileHeader
         user={user}
-        isOwnProfile={false}
-        isFollowing={user.isFollowing}
-        onFollow={handleFollow}
-        onUnfollow={handleUnfollow}
-        isFollowLoading={follow.isPending || unfollow.isPending}
+        isOwnProfile={isOwnProfile}
+        isFollowing={!isOwnProfile ? user.isFollowing : undefined}
+        onFollow={!isOwnProfile ? handleFollow : undefined}
+        onUnfollow={!isOwnProfile ? handleUnfollow : undefined}
+        isFollowLoading={
+          !isOwnProfile ? follow.isPending || unfollow.isPending : undefined
+        }
       />
 
       {/* Posts Grid */}

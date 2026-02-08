@@ -17,6 +17,7 @@ export const useLogout = () => {
     } finally {
       disconnectSocket();
       clear();
+      queryClient.cancelQueries();
       queryClient.clear();
       navigate('/login');
     }

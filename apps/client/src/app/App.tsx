@@ -9,7 +9,6 @@ import { SignupPage } from '../pages/auth/SignupPage';
 import { EditProfilePage } from '../pages/EditProfilePage';
 import { ExplorePage } from '../pages/ExplorePage';
 import { FeedPage } from '../pages/FeedPage';
-import { MePage } from '../pages/MePage';
 import { MessagesPage } from '../pages/MessagesPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PostPage } from '../pages/PostPage';
@@ -32,7 +31,7 @@ export const App = () => (
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/tags/:tag" element={<TagPage />} />
         <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/me" element={<MePage />} />
+        <Route path="/me" element={<ProfilePage />} />
         <Route path="/me/edit" element={<EditProfilePage />} />
         <Route path="/post/:id" element={<PostPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />

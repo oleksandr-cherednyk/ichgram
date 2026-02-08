@@ -256,7 +256,7 @@ export const getPostComments = async (
 export const likeComment = async (
   userId: string,
   commentId: string,
-): Promise<{ liked: boolean }> => {
+): Promise<boolean> => {
   const comment = await CommentModel.findById(commentId).lean();
   if (!comment) {
     throw createApiError(404, 'NOT_FOUND', 'Comment not found');
@@ -269,12 +269,12 @@ export const likeComment = async (
     });
   } catch (error) {
     if ((error as { code?: number }).code === 11000) {
-      return { liked: true };
+      return false;
     }
     throw error;
   }
 
-  return { liked: true };
+  return true;
 };
 
 /**
@@ -283,7 +283,7 @@ export const likeComment = async (
 export const unlikeComment = async (
   userId: string,
   commentId: string,
-): Promise<{ liked: boolean }> => {
+): Promise<boolean> => {
   const comment = await CommentModel.findById(commentId).lean();
   if (!comment) {
     throw createApiError(404, 'NOT_FOUND', 'Comment not found');
@@ -299,7 +299,8 @@ export const unlikeComment = async (
       { _id: commentId, likeCount: { $gt: 0 } },
       { $inc: { likeCount: -1 } },
     );
+    return true;
   }
 
-  return { liked: false };
+  return false;
 };

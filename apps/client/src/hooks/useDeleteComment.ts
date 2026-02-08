@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { apiRequest } from '../lib/api';
-import type { CommentsResponse, FeedPost, FeedResponse } from '../types/post';
+import { updatePostCache, updatePostInFeedCache } from '../lib/cache-updates';
+import type { CommentsResponse } from '../types/post';
 
 type DeleteCommentParams = {
   postId: string;
@@ -37,35 +38,16 @@ export const useDeleteComment = () => {
       });
 
       // Update comment count in feed
-      queryClient.setQueryData<{
-        pages: FeedResponse[];
-        pageParams: (string | null)[];
-      }>(['posts', 'feed'], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((post) =>
-              post.id === postId
-                ? { ...post, commentCount: Math.max(0, post.commentCount - 1) }
-                : post,
-            ),
-          })),
-        };
-      });
+      updatePostInFeedCache(queryClient, postId, (post) => ({
+        ...post,
+        commentCount: Math.max(0, post.commentCount - 1),
+      }));
 
       // Update comment count in single post
-      queryClient.setQueryData<{ post: FeedPost }>(['post', postId], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          post: {
-            ...old.post,
-            commentCount: Math.max(0, old.post.commentCount - 1),
-          },
-        };
-      });
+      updatePostCache(queryClient, postId, (post) => ({
+        ...post,
+        commentCount: Math.max(0, post.commentCount - 1),
+      }));
     },
     onError: () => {
       toast.error('Failed to delete comment');

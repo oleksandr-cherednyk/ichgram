@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiRequest } from '../lib/api';
+import { updatePostCache, updatePostInFeedCache } from '../lib/cache-updates';
 import type { FeedPost, FeedResponse, LikeResponse } from '../types/post';
 
 type ToggleLikeParams = {
@@ -32,39 +33,17 @@ export const useTogglePostLike = () => {
         postId,
       ]);
 
-      queryClient.setQueryData<{
-        pages: FeedResponse[];
-        pageParams: (string | null)[];
-      }>(['posts', 'feed'], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((post) =>
-              post.id === postId
-                ? {
-                    ...post,
-                    isLiked: nextLiked,
-                    likeCount: Math.max(0, post.likeCount + delta),
-                  }
-                : post,
-            ),
-          })),
-        };
-      });
+      updatePostInFeedCache(queryClient, postId, (post) => ({
+        ...post,
+        isLiked: nextLiked,
+        likeCount: Math.max(0, post.likeCount + delta),
+      }));
 
-      queryClient.setQueryData<{ post: FeedPost }>(['post', postId], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          post: {
-            ...old.post,
-            isLiked: nextLiked,
-            likeCount: Math.max(0, old.post.likeCount + delta),
-          },
-        };
-      });
+      updatePostCache(queryClient, postId, (post) => ({
+        ...post,
+        isLiked: nextLiked,
+        likeCount: Math.max(0, post.likeCount + delta),
+      }));
 
       return { previousFeed, previousPost };
     },

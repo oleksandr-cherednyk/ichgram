@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Camera } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { LoadingScreen } from '../components/common';
+import { AvatarUpload } from '../components/profile/AvatarUpload';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,13 +20,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { UserAvatar } from '../components/ui/user-avatar';
-import {
-  useDeleteAccount,
-  useProfile,
-  useUpdateAvatar,
-  useUpdateProfile,
-} from '../hooks';
+import { useDeleteAccount, useProfile, useUpdateProfile } from '../hooks';
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, 'Name is required').max(80),
@@ -40,9 +34,7 @@ export const EditProfilePage = () => {
   const navigate = useNavigate();
   const { data: user, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
-  const updateAvatar = useUpdateAvatar();
   const deleteAccount = useDeleteAccount();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm<EditProfileValues>({
@@ -59,19 +51,6 @@ export const EditProfilePage = () => {
     navigate('/me');
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      updateAvatar.mutate(file);
-    }
-    // Reset so same file can be re-selected
-    e.target.value = '';
-  };
-
   if (isLoading || !user) {
     return <LoadingScreen />;
   }
@@ -82,33 +61,7 @@ export const EditProfilePage = () => {
 
       <div className="space-y-6">
         {/* Avatar section */}
-        <div className="flex items-center justify-between rounded-2xl bg-zinc-50 p-4">
-          <div className="flex items-center gap-4">
-            <UserAvatar src={user.avatarUrl} alt={user.username} size="xl" />
-            <div>
-              <p className="font-semibold">{user.username}</p>
-              <p className="text-sm text-zinc-500">{user.fullName}</p>
-            </div>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handleAvatarChange}
-          />
-          <Button
-            type="button"
-            className="h-8 px-3 sm:px-8"
-            onClick={handleAvatarClick}
-            disabled={updateAvatar.isPending}
-          >
-            <Camera className="size-4 sm:hidden" />
-            <span className="hidden sm:inline">
-              {updateAvatar.isPending ? 'Uploading...' : 'New photo'}
-            </span>
-          </Button>
-        </div>
+        <AvatarUpload user={user} />
 
         {/* Form */}
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">

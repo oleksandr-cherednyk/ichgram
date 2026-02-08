@@ -81,7 +81,7 @@ export type FeedResponse = {
 /**
  * Last comment preview in home feed
  */
-export type FeedLastComment = {
+type FeedLastComment = {
   authorUsername: string;
   text: string;
 };

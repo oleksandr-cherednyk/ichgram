@@ -1,23 +1,14 @@
-import { MessageCircle, MoreHorizontal, Smile } from 'lucide-react';
-import { lazy, Suspense, useCallback, useState } from 'react';
-
-const EmojiPicker = lazy(() => import('emoji-picker-react'));
+import { MessageCircle, MoreHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import {
-  useCreateComment,
-  useEmojiPicker,
-  useFollow,
-  useProfile,
-  useUnfollow,
-  useUser,
-} from '../../hooks';
+import { useFollow, useProfile, useUnfollow, useUser } from '../../hooks';
 import { formatTimeAgo } from '../../lib/utils';
 import type { FeedPost } from '../../types/post';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { UserAvatar } from '../ui/user-avatar';
+import { CommentInput } from './CommentInput';
 import { CommentsSection } from './CommentsSection';
 import { LikeButton } from './LikeButton';
 
@@ -37,28 +28,8 @@ export const PostContent = ({
   const follow = useFollow();
   const unfollow = useUnfollow();
 
-  const [commentText, setCommentText] = useState('');
-  const createComment = useCreateComment();
-
-  const onEmoji = useCallback(
-    (emoji: string) => setCommentText((prev) => prev + emoji),
-    [],
-  );
-  const { showEmojiPicker, emojiRef, handleEmojiClick, toggleEmojiPicker } =
-    useEmojiPicker({ onEmoji });
-
   const isOwnPost = currentUser?.id === post.author.id;
   const isFollowing = authorProfile?.isFollowing ?? false;
-
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-
-    createComment.mutate(
-      { postId: post.id, text: commentText.trim() },
-      { onSuccess: () => setCommentText('') },
-    );
-  };
 
   const handleFollowToggle = () => {
     if (isFollowing) {
@@ -209,52 +180,7 @@ export const PostContent = ({
         </div>
 
         {/* Comment input */}
-        <Separator />
-        <form
-          onSubmit={handleSubmitComment}
-          className="flex items-center gap-3 px-4 py-3"
-        >
-          <div className="relative flex items-center" ref={emojiRef}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={toggleEmojiPicker}
-                  className="text-[#262626] transition-colors hover:text-zinc-600"
-                >
-                  <Smile className="h-6 w-6" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Emoji</TooltipContent>
-            </Tooltip>
-            {showEmojiPicker && (
-              <div className="absolute bottom-10 left-0 z-50">
-                <Suspense fallback={null}>
-                  <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
-                    width={320}
-                    height={400}
-                  />
-                </Suspense>
-              </div>
-            )}
-          </div>
-          <input
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Add a comment..."
-            maxLength={500}
-            className="flex-1 border-none bg-transparent text-sm outline-none placeholder:text-zinc-400"
-          />
-          <button
-            type="submit"
-            disabled={!commentText.trim() || createComment.isPending}
-            className="text-sm font-semibold text-[#0095F6] disabled:opacity-50"
-          >
-            Send
-          </button>
-        </form>
+        <CommentInput postId={post.id} />
       </div>
     </>
   );

@@ -8,7 +8,7 @@ import {
   Search,
 } from 'lucide-react';
 
-export type NavItem = {
+type NavItem = {
   to?: string;
   action?: 'create' | 'search' | 'notifications' | 'menu';
   label: string;

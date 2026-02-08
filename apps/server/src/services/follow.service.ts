@@ -109,15 +109,19 @@ export const isFollowing = async (
 // Followers / Following Lists
 // ============================================================================
 
-/**
- * Get followers of a user with pagination
- */
-export const getFollowers = async (
+type PopulatedFollowUser = {
+  _id: { toString(): string };
+  username: string;
+  fullName: string;
+  avatarUrl?: string;
+};
+
+const getFollowList = async (
   username: string,
+  direction: 'followers' | 'following',
   cursorParam?: string | null,
   limitParam?: number | string | null,
 ): Promise<PaginationResult<FollowUser>> => {
-  // Find user
   const user = await UserModel.findOne({ username }).lean();
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
@@ -126,30 +130,28 @@ export const getFollowers = async (
   const limit = parseLimit(limitParam);
   const cursor = decodeCursor(cursorParam);
 
-  // Build query
-  const query: {
-    followingId: string;
-    createdAt?: { $lt: Date };
-    _id?: { $ne: string };
-  } = { followingId: user._id.toString() };
+  const isFollowers = direction === 'followers';
+  const queryField = isFollowers ? 'followingId' : 'followerId';
+  const populateField = isFollowers ? 'followerId' : 'followingId';
+
+  const query: Record<string, unknown> = {
+    [queryField]: user._id.toString(),
+  };
 
   if (cursor) {
     query.createdAt = { $lt: new Date(cursor.createdAt) };
     query._id = { $ne: cursor.id };
   }
 
-  // Fetch follows with populated follower
   const follows = await FollowModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('followerId', 'username fullName avatarUrl')
+    .populate(populateField, 'username fullName avatarUrl')
     .lean();
 
-  // Determine if there are more
   const hasMore = follows.length > limit;
   const data = follows.slice(0, limit);
 
-  // Generate next cursor
   let nextCursor: string | null = null;
   if (hasMore && data.length > 0) {
     const lastFollow = data[data.length - 1];
@@ -161,19 +163,19 @@ export const getFollowers = async (
 
   return {
     data: data
-      .filter((follow) => follow.followerId != null)
+      .filter(
+        (follow) =>
+          (follow as unknown as Record<string, unknown>)[populateField] != null,
+      )
       .map((follow) => {
-        const follower = follow.followerId as unknown as {
-          _id: { toString(): string };
-          username: string;
-          fullName: string;
-          avatarUrl?: string;
-        };
+        const populated = (follow as unknown as Record<string, unknown>)[
+          populateField
+        ] as PopulatedFollowUser;
         return {
-          id: follower._id.toString(),
-          username: follower.username,
-          fullName: follower.fullName,
-          avatarUrl: follower.avatarUrl ?? null,
+          id: populated._id.toString(),
+          username: populated.username,
+          fullName: populated.fullName,
+          avatarUrl: populated.avatarUrl ?? null,
         };
       }),
     nextCursor,
@@ -181,77 +183,17 @@ export const getFollowers = async (
   };
 };
 
-/**
- * Get users that a user is following with pagination
- */
-export const getFollowing = async (
+export const getFollowers = (
   username: string,
   cursorParam?: string | null,
   limitParam?: number | string | null,
-): Promise<PaginationResult<FollowUser>> => {
-  // Find user
-  const user = await UserModel.findOne({ username }).lean();
-  if (!user) {
-    throw createApiError(404, 'NOT_FOUND', 'User not found');
-  }
+) => getFollowList(username, 'followers', cursorParam, limitParam);
 
-  const limit = parseLimit(limitParam);
-  const cursor = decodeCursor(cursorParam);
-
-  // Build query
-  const query: {
-    followerId: string;
-    createdAt?: { $lt: Date };
-    _id?: { $ne: string };
-  } = { followerId: user._id.toString() };
-
-  if (cursor) {
-    query.createdAt = { $lt: new Date(cursor.createdAt) };
-    query._id = { $ne: cursor.id };
-  }
-
-  // Fetch follows with populated following
-  const follows = await FollowModel.find(query)
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(limit + 1)
-    .populate('followingId', 'username fullName avatarUrl')
-    .lean();
-
-  // Determine if there are more
-  const hasMore = follows.length > limit;
-  const data = follows.slice(0, limit);
-
-  // Generate next cursor
-  let nextCursor: string | null = null;
-  if (hasMore && data.length > 0) {
-    const lastFollow = data[data.length - 1];
-    nextCursor = encodeCursor({
-      createdAt: lastFollow.createdAt.toISOString(),
-      id: lastFollow._id.toString(),
-    });
-  }
-
-  return {
-    data: data
-      .filter((follow) => follow.followingId != null)
-      .map((follow) => {
-        const following = follow.followingId as unknown as {
-          _id: { toString(): string };
-          username: string;
-          fullName: string;
-          avatarUrl?: string;
-        };
-        return {
-          id: following._id.toString(),
-          username: following.username,
-          fullName: following.fullName,
-          avatarUrl: following.avatarUrl ?? null,
-        };
-      }),
-    nextCursor,
-    hasMore,
-  };
-};
+export const getFollowing = (
+  username: string,
+  cursorParam?: string | null,
+  limitParam?: number | string | null,
+) => getFollowList(username, 'following', cursorParam, limitParam);
 
 // ============================================================================
 // Counts

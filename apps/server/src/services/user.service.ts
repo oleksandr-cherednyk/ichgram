@@ -16,6 +16,7 @@ import {
   decodeCursor,
   deleteFile,
   encodeCursor,
+  escapeRegex,
   parseLimit,
   type PaginationResult,
 } from '../utils';
@@ -207,26 +208,22 @@ export const updateAvatar = async (
   userId: string,
   avatarUrl: string,
 ): Promise<UserProfile> => {
-  // Get old avatar to delete
-  const oldUser = await UserModel.findById(userId).lean();
-  const oldAvatarUrl = oldUser?.avatarUrl;
-
-  const user = await UserModel.findByIdAndUpdate(
+  const oldUser = await UserModel.findByIdAndUpdate(
     userId,
     { avatarUrl },
-    { new: true },
-  );
+    { new: false },
+  ).lean();
 
-  if (!user) {
+  if (!oldUser) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
 
   // Delete old avatar file (non-blocking)
-  if (oldAvatarUrl) {
-    void deleteFile(oldAvatarUrl);
+  if (oldUser.avatarUrl) {
+    void deleteFile(oldUser.avatarUrl);
   }
 
-  return buildUserProfile(user);
+  return buildUserProfile({ ...oldUser, avatarUrl });
 };
 
 // ============================================================================
@@ -255,12 +252,12 @@ export const getUserPosts = async (
   const query: {
     authorId: Types.ObjectId;
     createdAt?: { $lt: Date };
-    _id?: { $ne: Types.ObjectId };
+    _id?: { $ne: string };
   } = { authorId: user._id };
 
   if (cursor) {
     query.createdAt = { $lt: new Date(cursor.createdAt) };
-    query._id = { $ne: new Types.ObjectId(cursor.id) };
+    query._id = { $ne: cursor.id };
   }
 
   // Fetch posts
@@ -315,8 +312,7 @@ export const searchUsers = async (
   const query: Record<string, unknown> = {};
 
   if (searchQuery) {
-    // Escape special regex characters
-    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedQuery = escapeRegex(searchQuery);
 
     // Search by username or fullName (case-insensitive)
     query.$or = [
@@ -328,7 +324,7 @@ export const searchUsers = async (
   // Add cursor pagination filter
   if (cursor) {
     query.createdAt = { $lt: new Date(cursor.createdAt) };
-    query._id = { $ne: new Types.ObjectId(cursor.id) };
+    query._id = { $ne: cursor.id };
   }
 
   // Fetch users

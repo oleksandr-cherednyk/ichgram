@@ -63,7 +63,66 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   return refreshPromise;
 };
 
-const makeRequest = async (
+type WithAuthOptions = {
+  /** Skip the pre-flight token refresh when no token is present */
+  skipPreflightRefresh?: boolean;
+  /** Skip the 401 retry (e.g. for the refresh endpoint itself) */
+  skipRetryOn401?: boolean;
+};
+
+const withAuth = async <T>(
+  execute: (token: string | null) => Promise<Response>,
+  opts: WithAuthOptions = {},
+): Promise<T> => {
+  const { accessToken, setAccessToken, clear } = useAuthStore.getState();
+
+  let token = accessToken;
+
+  // No token — try refresh before hitting the server (unless skipped)
+  if (!token && !opts.skipPreflightRefresh) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      setAccessToken(newToken);
+      token = newToken;
+    } else {
+      clear();
+      queryClient.cancelQueries();
+      queryClient.clear();
+      throw buildError(401, {
+        code: 'UNAUTHORIZED',
+        message: 'Not authenticated',
+      });
+    }
+  }
+
+  let response = await execute(token);
+
+  // If 401, try to refresh and retry (unless skipped)
+  if (response.status === 401 && !opts.skipRetryOn401) {
+    const newToken = await refreshAccessToken();
+
+    if (newToken) {
+      setAccessToken(newToken);
+      response = await execute(newToken);
+    } else {
+      clear();
+      queryClient.cancelQueries();
+      queryClient.clear();
+    }
+  }
+
+  const text = await response.text();
+  const data = text ? (JSON.parse(text) as unknown) : null;
+
+  if (!response.ok) {
+    const parsedError = (data as ApiErrorResponse | null)?.error;
+    throw buildError(response.status, parsedError);
+  }
+
+  return data as T;
+};
+
+const makeRequest = (
   input: string,
   init?: RequestInit,
   token?: string | null,
@@ -88,7 +147,7 @@ const makeRequest = async (
   });
 };
 
-const makeUploadRequest = async (
+const makeUploadRequest = (
   input: string,
   method: string,
   body: FormData,
@@ -112,52 +171,12 @@ export const apiRequest = async <T>(
   input: string,
   init?: RequestInit,
 ): Promise<T> => {
-  const { accessToken, setAccessToken, clear } = useAuthStore.getState();
+  const isAuthEndpoint = input.startsWith('/auth/');
 
-  // No token and not an auth endpoint — try refresh before hitting the server
-  let token = accessToken;
-  if (!token && !input.startsWith('/auth/')) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      setAccessToken(newToken);
-      token = newToken;
-    } else {
-      clear();
-      queryClient.clear();
-      throw buildError(401, {
-        code: 'UNAUTHORIZED',
-        message: 'Not authenticated',
-      });
-    }
-  }
-
-  let response = await makeRequest(input, init, token);
-
-  // If 401 and not the refresh endpoint itself, try to refresh
-  if (response.status === 401 && !input.includes('/auth/refresh')) {
-    const newToken = await refreshAccessToken();
-
-    if (newToken) {
-      // Update store with new token
-      setAccessToken(newToken);
-      // Retry the original request
-      response = await makeRequest(input, init, newToken);
-    } else {
-      // Refresh failed - clear auth state (triggers redirect to /login)
-      clear();
-      queryClient.clear();
-    }
-  }
-
-  const text = await response.text();
-  const data = text ? (JSON.parse(text) as unknown) : null;
-
-  if (!response.ok) {
-    const parsedError = (data as ApiErrorResponse | null)?.error;
-    throw buildError(response.status, parsedError);
-  }
-
-  return data as T;
+  return withAuth<T>((token) => makeRequest(input, init, token), {
+    skipPreflightRefresh: isAuthEndpoint,
+    skipRetryOn401: input.includes('/auth/refresh'),
+  });
 };
 
 export const apiUpload = async <T>(
@@ -165,47 +184,5 @@ export const apiUpload = async <T>(
   method: string,
   body: FormData,
 ): Promise<T> => {
-  const { accessToken, setAccessToken, clear } = useAuthStore.getState();
-
-  // No token — try refresh before hitting the server
-  let token = accessToken;
-  if (!token) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      setAccessToken(newToken);
-      token = newToken;
-    } else {
-      clear();
-      queryClient.clear();
-      throw buildError(401, {
-        code: 'UNAUTHORIZED',
-        message: 'Not authenticated',
-      });
-    }
-  }
-
-  let response = await makeUploadRequest(input, method, body, token);
-
-  // If 401, try to refresh and retry
-  if (response.status === 401) {
-    const newToken = await refreshAccessToken();
-
-    if (newToken) {
-      setAccessToken(newToken);
-      response = await makeUploadRequest(input, method, body, newToken);
-    } else {
-      clear();
-      queryClient.clear();
-    }
-  }
-
-  const text = await response.text();
-  const data = text ? (JSON.parse(text) as unknown) : null;
-
-  if (!response.ok) {
-    const parsedError = (data as ApiErrorResponse | null)?.error;
-    throw buildError(response.status, parsedError);
-  }
-
-  return data as T;
+  return withAuth<T>((token) => makeUploadRequest(input, method, body, token));
 };
