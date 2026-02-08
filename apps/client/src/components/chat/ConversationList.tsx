@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 
 import {
@@ -7,6 +8,16 @@ import {
 } from '../../hooks';
 import { cn, formatTimeAgo, getOtherParticipant } from '../../lib/utils';
 import { useChatStore } from '../../stores/chat';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { Spinner } from '../ui/spinner';
 import { UserAvatar } from '../ui/user-avatar';
 
@@ -14,6 +25,10 @@ export const ConversationList = () => {
   const { data: profile } = useProfile();
   const { activeConversationId, setActiveConversation } = useChatStore();
   const deleteConversation = useDeleteConversation();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<
+    string | null
+  >(null);
   const {
     data,
     fetchNextPage,
@@ -110,15 +125,10 @@ export const ConversationList = () => {
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            const confirmed = window.confirm(
-                              'Delete this conversation for you?',
-                            );
-                            if (!confirmed) return;
-                            deleteConversation.mutate({
-                              conversationId: conversation.id,
-                            });
+                            setConversationToDelete(conversation.id);
+                            setShowDeleteDialog(true);
                           }}
-                          className="rounded p-1 text-zinc-400 opacity-0 transition-colors hover:bg-zinc-100 hover:text-red-500 group-hover:opacity-100 md:opacity-100"
+                          className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500"
                           aria-label="Delete conversation"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -147,6 +157,32 @@ export const ConversationList = () => {
           )}
         </>
       )}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This conversation will be deleted for you. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (conversationToDelete) {
+                  deleteConversation.mutate({
+                    conversationId: conversationToDelete,
+                  });
+                }
+              }}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
