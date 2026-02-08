@@ -8,7 +8,7 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 ### Authentication
 
 - Sign up / Log in / Log out
-- JWT access token (15 min) + httpOnly refresh cookie (7 days)
+- JWT access token (1 hour) + httpOnly refresh cookie (7 days)
 - Auto-refresh on 401 with race condition protection (`withAuth` wrapper)
 - In-flight query cancellation on logout/session expiry
 - Protected routes with token expiry check
@@ -162,7 +162,7 @@ User, Post, Comment, Like, CommentLike, Follow, Notification, Conversation, Mess
 ## Security Decisions
 
 - Refresh token stored in **httpOnly cookie** (prevents JS token theft via XSS)
-- Short-lived access token (15 min)
+- Short-lived access token (1 hour)
 - Strict CORS policy (`origin = CLIENT_ORIGIN`, `credentials = true`)
 - Validation with Zod on all API inputs
 - File upload restrictions (size/type whitelist) + sharp processing
@@ -211,7 +211,7 @@ PORT=4000
 MONGO_URI=mongodb://localhost:27017/ichgram
 JWT_ACCESS_SECRET=your-access-secret-min-32-chars
 JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
-CLIENT_ORIGIN=http://localhost:5173
+CLIENT_ORIGIN=http://localhost:3000
 ```
 
 ### Install
@@ -232,7 +232,7 @@ From the repo root:
 
 ```bash
 pnpm dev          # client + server
-pnpm dev:client   # http://localhost:5173
+pnpm dev:client   # http://localhost:3000
 pnpm dev:server   # http://localhost:4000
 ```
 

@@ -51,7 +51,7 @@
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
 - `CLIENT_ORIGIN`
-- `ACCESS_TOKEN_TTL` (default 15m)
+- `ACCESS_TOKEN_TTL` (default 1h)
 - `REFRESH_TOKEN_TTL` (default 7d)
 - `NODE_ENV`
 

@@ -7,7 +7,7 @@
 - Cookie flags
   - Dev: httpOnly, sameSite=lax, secure=false (localhost)
   - Prod: httpOnly, sameSite=none, secure=true
-- Env vars: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL (default 15m), REFRESH_TOKEN_TTL (default 7d), NODE_ENV
+- Env vars: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL (default 1h), REFRESH_TOKEN_TTL (default 7d), NODE_ENV
 
 ## Threat-driven checklist
 
