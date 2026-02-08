@@ -9,7 +9,8 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 
 - Sign up / Log in / Log out
 - JWT access token (15 min) + httpOnly refresh cookie (7 days)
-- Auto-refresh on 401 with race condition protection
+- Auto-refresh on 401 with race condition protection (`withAuth` wrapper)
+- In-flight query cancellation on logout/session expiry
 - Protected routes with token expiry check
 
 ### Posts
@@ -64,7 +65,7 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 ### User Profiles
 
 - Public profile view by username
-- Own profile with edit modal
+- Own profile (unified with public profile page)
 - Edit profile (fullName, bio, website)
 - Avatar upload with image optimization
 - Posts grid on profile
@@ -144,6 +145,7 @@ ichgram/
 
 - **Server-state (API data):** TanStack Query — caching, pagination, invalidation, optimistic updates
 - **UI state (overlays/modals):** Zustand — auth token, search/notification/create-post/mobile-menu overlays, chat active conversation
+- **Cache helpers:** Shared `updatePostInFeedCache`/`updatePostCache` for DRY cache mutations across hooks
 
 ### Real-time chat
 
@@ -165,6 +167,8 @@ User, Post, Comment, Like, CommentLike, Follow, Notification, Conversation, Mess
 - Validation with Zod on all API inputs
 - File upload restrictions (size/type whitelist) + sharp processing
 - Ownership checks on edit/delete (posts, comments, profile)
+- Username validation (regex + reserved names blacklist)
+- `passwordHash` excluded from query results by default (`select: false`)
 
 ---
 
@@ -183,6 +187,9 @@ User, Post, Comment, Like, CommentLike, Follow, Notification, Conversation, Mess
 - TanStack Query caching with staleTime and query invalidation
 - Optimistic updates for likes and messages
 - Virtualized message list for large chats
+- `.lean()` on all read-only Mongoose queries
+- Lazy-loaded emoji picker (`React.lazy`)
+- Cascade deletion on post delete (likes, comments, comment-likes, notifications)
 
 ---
 
