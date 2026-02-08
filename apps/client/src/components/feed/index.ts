@@ -7,4 +7,3 @@ export * from './PostActionsModal';
 export * from './PostCardSkeleton';
 export * from './PostContent';
 export * from './PostDetailModal';
-export * from './PostModal';

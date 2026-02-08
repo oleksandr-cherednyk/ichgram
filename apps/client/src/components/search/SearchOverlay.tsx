@@ -9,7 +9,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { SearchResults } from './SearchResults';
 
 export const SearchOverlay = () => {
-  const { isOpen, query, setQuery, close, reset } = useSearchStore();
+  const { isOpen, query, setQuery, reset } = useSearchStore();
   const closeNotifications = useNotificationStore((s) => s.close);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -100,7 +100,7 @@ export const SearchOverlay = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={close}
+          onClick={reset}
           className="rounded-full p-1"
         >
           <X className="h-5 w-5" />

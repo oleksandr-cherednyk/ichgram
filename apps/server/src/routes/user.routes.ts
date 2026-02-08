@@ -49,6 +49,12 @@ userRouter.post(
   userController.updateAvatar,
 );
 
+/**
+ * DELETE /users/me
+ * Delete current user's account and all associated data
+ */
+userRouter.delete('/me', requireAuth, userController.deleteMe);
+
 // ============================================================================
 // Search Users (must be before :username route)
 // ============================================================================

@@ -1,7 +1,7 @@
 import { type Request, type Response } from 'express';
 
 import * as userService from '../services/user.service';
-import { createApiError } from '../utils';
+import { clearRefreshCookie, createApiError } from '../utils';
 import type {
   UpdateProfileInput,
   UsernameParam,
@@ -101,4 +101,17 @@ export const searchUsers = async (
   const result = await userService.searchUsers(q, cursor, limit);
 
   res.json(result);
+};
+
+/**
+ * DELETE /users/me
+ * Delete current user's account and all associated data
+ */
+export const deleteMe = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.userId!;
+
+  await userService.deleteAccount(userId);
+
+  clearRefreshCookie(res);
+  res.status(204).send();
 };

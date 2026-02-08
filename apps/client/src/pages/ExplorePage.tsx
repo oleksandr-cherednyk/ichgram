@@ -2,7 +2,7 @@ import { Compass } from 'lucide-react';
 import { useState } from 'react';
 
 import { PostGridItem } from '../components/common';
-import { PostViewModal } from '../components/profile';
+import { PostDetailModal } from '../components/feed';
 import { Skeleton } from '../components/ui/skeleton';
 import { useExplorePosts } from '../hooks';
 
@@ -62,7 +62,7 @@ export const ExplorePage = () => {
       </div>
 
       {/* Post Modal */}
-      <PostViewModal
+      <PostDetailModal
         postId={selectedPostId}
         onClose={() => setSelectedPostId(null)}
       />

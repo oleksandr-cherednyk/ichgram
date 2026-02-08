@@ -50,8 +50,10 @@ export const ChatView = ({ conversationId, onBack }: ChatViewProps) => {
     ? getOtherParticipant(conversation, profile?.id)
     : null;
 
-  const messages = data?.pages.flatMap((page) => page.data) ?? [];
-  const orderedMessages = useMemo(() => [...messages].reverse(), [messages]);
+  const orderedMessages = useMemo(
+    () => (data?.pages.flatMap((page) => page.data) ?? []).reverse(),
+    [data],
+  );
 
   useEffect(() => {
     markRead({ conversationId });

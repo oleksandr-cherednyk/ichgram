@@ -34,21 +34,24 @@ const buildTokenPair = (userId: string): TokenPair => ({
 });
 
 const buildAuthResult = (user: {
-  id: string;
+  _id: { toString(): string };
   email: string;
   fullName: string;
   username: string;
   avatarUrl?: string | null;
-}): AuthResult => ({
-  user: {
-    id: user.id,
-    email: user.email,
-    fullName: user.fullName,
-    username: user.username,
-    avatarUrl: user.avatarUrl ?? null,
-  },
-  ...buildTokenPair(user.id),
-});
+}): AuthResult => {
+  const id = user._id.toString();
+  return {
+    user: {
+      id,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+      avatarUrl: user.avatarUrl ?? null,
+    },
+    ...buildTokenPair(id),
+  };
+};
 
 export const registerUser = async (
   input: RegisterInput,
@@ -56,7 +59,7 @@ export const registerUser = async (
   const email = normalizeEmail(input.email);
   const existing = await UserModel.findOne({
     $or: [{ email }, { username: input.username }],
-  });
+  }).lean();
 
   if (existing) {
     throw createApiError(409, 'CONFLICT', 'Email or username already in use');
@@ -74,7 +77,11 @@ export const registerUser = async (
 };
 
 export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
-  const user = await UserModel.findOne({ email: normalizeEmail(input.email) });
+  const user = await UserModel.findOne({
+    email: normalizeEmail(input.email),
+  })
+    .select('+passwordHash')
+    .lean();
   if (!user) {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid credentials');
   }
@@ -97,10 +104,10 @@ export const refreshSession = async (token: string): Promise<TokenPair> => {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }
 
-  const user = await UserModel.findById(userId);
+  const user = await UserModel.findById(userId).lean();
   if (!user) {
     throw createApiError(401, 'UNAUTHORIZED', 'Invalid refresh token');
   }
 
-  return buildTokenPair(user.id);
+  return buildTokenPair(user._id.toString());
 };

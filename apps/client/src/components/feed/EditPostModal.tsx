@@ -1,6 +1,7 @@
-import EmojiPicker from 'emoji-picker-react';
 import { ImagePlus, Smile } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 
 import { useEmojiPicker, useProfile, useUpdatePost } from '../../hooks';
 import type { FeedPost } from '../../types/post';
@@ -157,11 +158,13 @@ export const EditPostModal = ({
                   </button>
                   {showEmojiPicker && (
                     <div className="absolute bottom-8 left-0 z-50">
-                      <EmojiPicker
-                        onEmojiClick={handleEmojiClick}
-                        width={320}
-                        height={400}
-                      />
+                      <Suspense fallback={null}>
+                        <EmojiPicker
+                          onEmojiClick={handleEmojiClick}
+                          width={320}
+                          height={400}
+                        />
+                      </Suspense>
                     </div>
                   )}
                 </div>
@@ -170,7 +173,7 @@ export const EditPostModal = ({
 
               {updatePost.isError && (
                 <p className="mt-2 text-center text-sm text-red-500">
-                  {updatePost.error.message}
+                  Failed to update post
                 </p>
               )}
             </div>

@@ -1,5 +1,6 @@
 import { useAuthStore } from '../stores/auth';
 import { type ApiError, type ApiErrorResponse } from '../types/api';
+import { queryClient } from './query-client';
 
 export const buildCursorUrl = (
   path: string,
@@ -113,7 +114,24 @@ export const apiRequest = async <T>(
 ): Promise<T> => {
   const { accessToken, setAccessToken, clear } = useAuthStore.getState();
 
-  let response = await makeRequest<T>(input, init, accessToken);
+  // No token and not an auth endpoint — try refresh before hitting the server
+  let token = accessToken;
+  if (!token && !input.startsWith('/auth/')) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      setAccessToken(newToken);
+      token = newToken;
+    } else {
+      clear();
+      queryClient.clear();
+      throw buildError(401, {
+        code: 'UNAUTHORIZED',
+        message: 'Not authenticated',
+      });
+    }
+  }
+
+  let response = await makeRequest(input, init, token);
 
   // If 401 and not the refresh endpoint itself, try to refresh
   if (response.status === 401 && !input.includes('/auth/refresh')) {
@@ -123,10 +141,11 @@ export const apiRequest = async <T>(
       // Update store with new token
       setAccessToken(newToken);
       // Retry the original request
-      response = await makeRequest<T>(input, init, newToken);
+      response = await makeRequest(input, init, newToken);
     } else {
       // Refresh failed - clear auth state (triggers redirect to /login)
       clear();
+      queryClient.clear();
     }
   }
 
@@ -148,7 +167,24 @@ export const apiUpload = async <T>(
 ): Promise<T> => {
   const { accessToken, setAccessToken, clear } = useAuthStore.getState();
 
-  let response = await makeUploadRequest(input, method, body, accessToken);
+  // No token — try refresh before hitting the server
+  let token = accessToken;
+  if (!token) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      setAccessToken(newToken);
+      token = newToken;
+    } else {
+      clear();
+      queryClient.clear();
+      throw buildError(401, {
+        code: 'UNAUTHORIZED',
+        message: 'Not authenticated',
+      });
+    }
+  }
+
+  let response = await makeUploadRequest(input, method, body, token);
 
   // If 401, try to refresh and retry
   if (response.status === 401) {
@@ -159,6 +195,7 @@ export const apiUpload = async <T>(
       response = await makeUploadRequest(input, method, body, newToken);
     } else {
       clear();
+      queryClient.clear();
     }
   }
 

@@ -7,11 +7,6 @@ export type CursorPayload = {
   id: string;
 };
 
-export type PaginationParams = {
-  cursor?: string | null;
-  limit?: number | string | null;
-};
-
 export type PaginationResult<T> = {
   data: T[];
   nextCursor: string | null;

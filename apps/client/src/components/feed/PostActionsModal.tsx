@@ -29,10 +29,14 @@ export const PostActionsModal = ({
   };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(
-      `${window.location.origin}/post/${postId}`,
-    );
-    toast.success('Link copied');
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/post/${postId}`,
+      );
+      toast.success('Link copied');
+    } catch {
+      toast.error('Failed to copy link');
+    }
     onClose();
   };
 

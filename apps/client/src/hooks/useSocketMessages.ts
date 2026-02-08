@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { getSocket } from '../lib/socket';
@@ -20,6 +20,8 @@ export const useSocketMessages = () => {
     (state) => state.setActiveConversation,
   );
   const markConversationRead = useMarkConversationRead();
+  const markReadRef = useRef(markConversationRead);
+  markReadRef.current = markConversationRead;
 
   useEffect(() => {
     const socket = getSocket();
@@ -45,7 +47,7 @@ export const useSocketMessages = () => {
       queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
 
       if (activeConversationId === message.conversationId) {
-        markConversationRead.mutate({ conversationId: message.conversationId });
+        markReadRef.current.mutate({ conversationId: message.conversationId });
         queryClient.setQueryData<{
           pages: ConversationsResponse[];
           pageParams: (string | null)[];
@@ -144,10 +146,5 @@ export const useSocketMessages = () => {
       socket.off('message:new', handleMessage);
       socket.off('conversation:deleted', handleConversationDeleted);
     };
-  }, [
-    activeConversationId,
-    markConversationRead,
-    queryClient,
-    setActiveConversation,
-  ]);
+  }, [activeConversationId, queryClient, setActiveConversation]);
 };

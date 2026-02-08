@@ -99,12 +99,10 @@ export const LoginPage = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="sr-only">
-                        Username or email
-                      </FormLabel>
+                      <FormLabel className="sr-only">Email</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Username or email"
+                          placeholder="Email"
                           autoComplete="username"
                           type="text"
                           {...field}

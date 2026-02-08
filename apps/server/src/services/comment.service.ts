@@ -112,7 +112,7 @@ export const createComment = async (
   text: string,
 ): Promise<CommentWithAuthor> => {
   // Check if post exists
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
   }
@@ -150,7 +150,7 @@ export const deleteComment = async (
   userId: string,
   commentId: string,
 ): Promise<void> => {
-  const comment = await CommentModel.findById(commentId);
+  const comment = await CommentModel.findById(commentId).lean();
 
   if (!comment) {
     throw createApiError(404, 'NOT_FOUND', 'Comment not found');
@@ -187,7 +187,7 @@ export const getPostComments = async (
   userId?: string | null,
 ): Promise<PaginationResult<CommentWithAuthor>> => {
   // Check if post exists
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
   }
@@ -211,7 +211,8 @@ export const getPostComments = async (
   const comments = await CommentModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('authorId', 'username avatarUrl');
+    .populate('authorId', 'username avatarUrl')
+    .lean();
 
   // Determine if there are more results
   const hasMore = comments.length > limit;
@@ -256,7 +257,7 @@ export const likeComment = async (
   userId: string,
   commentId: string,
 ): Promise<{ liked: boolean }> => {
-  const comment = await CommentModel.findById(commentId);
+  const comment = await CommentModel.findById(commentId).lean();
   if (!comment) {
     throw createApiError(404, 'NOT_FOUND', 'Comment not found');
   }
@@ -283,7 +284,7 @@ export const unlikeComment = async (
   userId: string,
   commentId: string,
 ): Promise<{ liked: boolean }> => {
-  const comment = await CommentModel.findById(commentId);
+  const comment = await CommentModel.findById(commentId).lean();
   if (!comment) {
     throw createApiError(404, 'NOT_FOUND', 'Comment not found');
   }

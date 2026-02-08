@@ -1,6 +1,16 @@
 import { Types } from 'mongoose';
 
-import { PostModel, UserModel } from '../models';
+import {
+  CommentModel,
+  CommentLikeModel,
+  ConversationModel,
+  FollowModel,
+  LikeModel,
+  MessageModel,
+  NotificationModel,
+  PostModel,
+  UserModel,
+} from '../models';
 import {
   createApiError,
   decodeCursor,
@@ -64,9 +74,15 @@ type UserPostItem = {
  * Build a UserProfile from a Mongoose user document.
  * Fetches postsCount, followersCount, followingCount in parallel.
  */
-const buildUserProfile = async (
-  user: InstanceType<typeof UserModel>,
-): Promise<UserProfile> => {
+const buildUserProfile = async (user: {
+  _id: Types.ObjectId;
+  username: string;
+  fullName: string;
+  avatarUrl?: string;
+  bio?: string;
+  website?: string;
+  createdAt: Date;
+}): Promise<UserProfile> => {
   const userId = user._id.toString();
 
   const [postsCount, followersCount, followingCount] = await Promise.all([
@@ -97,7 +113,7 @@ const buildUserProfile = async (
  * Get current authenticated user's profile
  */
 export const getCurrentUser = async (userId: string): Promise<UserProfile> => {
-  const user = await UserModel.findById(userId);
+  const user = await UserModel.findById(userId).lean();
 
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
@@ -125,7 +141,7 @@ export const getUserByUsername = async (
   username: string,
   currentUserId?: string,
 ): Promise<UserProfileWithFollow> => {
-  const user = await UserModel.findOne({ username });
+  const user = await UserModel.findOne({ username }).lean();
 
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
@@ -192,7 +208,7 @@ export const updateAvatar = async (
   avatarUrl: string,
 ): Promise<UserProfile> => {
   // Get old avatar to delete
-  const oldUser = await UserModel.findById(userId);
+  const oldUser = await UserModel.findById(userId).lean();
   const oldAvatarUrl = oldUser?.avatarUrl;
 
   const user = await UserModel.findByIdAndUpdate(
@@ -226,7 +242,7 @@ export const getUserPosts = async (
   limitParam?: number | string | null,
 ): Promise<PaginationResult<UserPostItem>> => {
   // Find user first
-  const user = await UserModel.findOne({ username });
+  const user = await UserModel.findOne({ username }).lean();
 
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
@@ -251,7 +267,8 @@ export const getUserPosts = async (
   const posts = await PostModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .select('imageUrl likeCount commentCount createdAt');
+    .select('imageUrl likeCount commentCount createdAt')
+    .lean();
 
   // Determine if there are more results
   const hasMore = posts.length > limit;
@@ -318,7 +335,8 @@ export const searchUsers = async (
   const users = await UserModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .select('username fullName avatarUrl createdAt');
+    .select('username fullName avatarUrl createdAt')
+    .lean();
 
   // Determine if there are more results
   const hasMore = users.length > limit;
@@ -344,4 +362,156 @@ export const searchUsers = async (
     nextCursor,
     hasMore,
   };
+};
+
+// ============================================================================
+// Delete Account
+// ============================================================================
+
+/**
+ * Delete user account and all associated data.
+ * Cascade: posts (+ their likes/comments/comment-likes/notifications/images),
+ * user's comments on other posts, user's likes, comment-likes,
+ * follows, notifications, conversations, messages, avatar.
+ */
+export const deleteAccount = async (userId: string): Promise<void> => {
+  const user = await UserModel.findById(userId).lean();
+  if (!user) {
+    throw createApiError(404, 'NOT_FOUND', 'User not found');
+  }
+
+  const userObjectId = user._id;
+
+  // --- 1. Delete user's own posts (with full cascade per post) ---
+  const userPosts = await PostModel.find({ authorId: userObjectId })
+    .select('_id imageUrl')
+    .lean();
+
+  if (userPosts.length > 0) {
+    const postIds = userPosts.map((p) => p._id);
+
+    // Get all comment IDs on user's posts (for comment-like cleanup)
+    const commentIdsOnUserPosts = await CommentModel.find({
+      postId: { $in: postIds },
+    }).distinct('_id');
+
+    await Promise.all([
+      LikeModel.deleteMany({ postId: { $in: postIds } }),
+      CommentLikeModel.deleteMany({
+        commentId: { $in: commentIdsOnUserPosts },
+      }),
+      CommentModel.deleteMany({ postId: { $in: postIds } }),
+      NotificationModel.deleteMany({ postId: { $in: postIds } }),
+      PostModel.deleteMany({ authorId: userObjectId }),
+    ]);
+
+    // Delete post images (non-blocking)
+    for (const post of userPosts) {
+      void deleteFile(post.imageUrl);
+    }
+  }
+
+  // --- 2. Delete user's comments on OTHER posts (adjust commentCount) ---
+  const userComments = await CommentModel.find({ authorId: userId })
+    .select('_id postId')
+    .lean();
+
+  if (userComments.length > 0) {
+    const commentIds = userComments.map((c) => c._id);
+
+    // Decrement commentCount per affected post
+    const postIdCounts = new Map<string, number>();
+    for (const comment of userComments) {
+      const pid = comment.postId.toString();
+      postIdCounts.set(pid, (postIdCounts.get(pid) ?? 0) + 1);
+    }
+
+    const commentCountUpdates = [...postIdCounts.entries()].map(
+      ([postId, count]) =>
+        PostModel.updateOne(
+          { _id: postId },
+          { $inc: { commentCount: -count } },
+        ),
+    );
+
+    await Promise.all([
+      CommentLikeModel.deleteMany({ commentId: { $in: commentIds } }),
+      CommentModel.deleteMany({ authorId: userId }),
+      ...commentCountUpdates,
+    ]);
+  }
+
+  // --- 3. Delete user's likes on other posts (adjust likeCount) ---
+  const userLikes = await LikeModel.find({ userId }).select('postId').lean();
+
+  if (userLikes.length > 0) {
+    const likePostCounts = new Map<string, number>();
+    for (const like of userLikes) {
+      const pid = like.postId.toString();
+      likePostCounts.set(pid, (likePostCounts.get(pid) ?? 0) + 1);
+    }
+
+    const likeCountUpdates = [...likePostCounts.entries()].map(
+      ([postId, count]) =>
+        PostModel.updateOne({ _id: postId }, { $inc: { likeCount: -count } }),
+    );
+
+    await Promise.all([LikeModel.deleteMany({ userId }), ...likeCountUpdates]);
+  }
+
+  // --- 4. Delete user's comment-likes (adjust comment likeCount) ---
+  const userCommentLikes = await CommentLikeModel.find({ userId })
+    .select('commentId')
+    .lean();
+
+  if (userCommentLikes.length > 0) {
+    const commentLikeCounts = new Map<string, number>();
+    for (const cl of userCommentLikes) {
+      const cid = cl.commentId.toString();
+      commentLikeCounts.set(cid, (commentLikeCounts.get(cid) ?? 0) + 1);
+    }
+
+    const clUpdates = [...commentLikeCounts.entries()].map(
+      ([commentId, count]) =>
+        CommentModel.updateOne(
+          { _id: commentId },
+          { $inc: { likeCount: -count } },
+        ),
+    );
+
+    await Promise.all([CommentLikeModel.deleteMany({ userId }), ...clUpdates]);
+  }
+
+  // --- 5. Delete follows (both directions) ---
+  await FollowModel.deleteMany({
+    $or: [{ followerId: userId }, { followingId: userId }],
+  });
+
+  // --- 6. Delete notifications (as recipient and as actor) ---
+  await NotificationModel.deleteMany({
+    $or: [{ userId }, { actorId: userId }],
+  });
+
+  // --- 7. Delete conversations and messages ---
+  const conversations = await ConversationModel.find({
+    participantIds: userObjectId,
+  })
+    .select('_id')
+    .lean();
+
+  if (conversations.length > 0) {
+    const conversationIds = conversations.map((c) => c._id);
+    await Promise.all([
+      MessageModel.deleteMany({ conversationId: { $in: conversationIds } }),
+      ConversationModel.deleteMany({ _id: { $in: conversationIds } }),
+    ]);
+  }
+
+  // --- 8. Delete avatar file (non-blocking) ---
+  if (user.avatarUrl) {
+    void deleteFile(user.avatarUrl);
+  }
+
+  // --- 9. Delete user ---
+  await UserModel.findByIdAndDelete(userId);
 };

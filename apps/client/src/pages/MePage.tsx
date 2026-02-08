@@ -1,19 +1,15 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { PostDetailModal } from '../components/feed';
 import {
-  PostViewModal,
   ProfileGrid,
   ProfileHeader,
   ProfileSkeleton,
 } from '../components/profile';
-import { useProfile, useUserPosts } from '../hooks';
-import { apiRequest } from '../lib/api';
-import { useAuthStore } from '../stores/auth';
+import { useLogout, useProfile, useUserPosts } from '../hooks';
 
 export const MePage = () => {
-  const navigate = useNavigate();
-  const { clear } = useAuthStore();
+  const logout = useLogout();
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const { data: user, isLoading, error } = useProfile();
@@ -36,11 +32,7 @@ export const MePage = () => {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-zinc-500">Failed to load profile</p>
         <button
-          onClick={async () => {
-            await apiRequest('/auth/logout', { method: 'POST' });
-            clear();
-            navigate('/login');
-          }}
+          onClick={logout}
           className="text-sm text-[#0095F6] hover:underline"
         >
           Log out
@@ -63,7 +55,7 @@ export const MePage = () => {
         />
       </section>
 
-      <PostViewModal
+      <PostDetailModal
         postId={selectedPostId}
         onClose={() => setSelectedPostId(null)}
       />

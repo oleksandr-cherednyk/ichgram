@@ -30,7 +30,6 @@ const conversationSchema = new Schema(
   { timestamps: true },
 );
 
-conversationSchema.index({ participantIds: 1 });
 conversationSchema.index({ participantIds: 1, lastMessageAt: -1 });
 
 export type Conversation = InferSchemaType<typeof conversationSchema>;

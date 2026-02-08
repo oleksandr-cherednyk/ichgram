@@ -22,7 +22,7 @@ export const FeedPage = () => {
     error,
   } = useFeedPosts();
 
-  const posts = (data?.pages.flatMap((page) => page.data) ?? []).slice(0, 6);
+  const posts = data?.pages.flatMap((page) => page.data) ?? [];
 
   if (isLoading) {
     return (

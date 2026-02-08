@@ -12,7 +12,7 @@ export const likePost = async (
   postId: string,
 ): Promise<boolean> => {
   // Check if post exists
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
   }
@@ -53,7 +53,7 @@ export const unlikePost = async (
   postId: string,
 ): Promise<boolean> => {
   // Check if post exists
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
   }
@@ -80,7 +80,7 @@ export const isPostLikedByUser = async (
   userId: string,
   postId: string,
 ): Promise<boolean> => {
-  const like = await LikeModel.findOne({ userId, postId });
+  const like = await LikeModel.findOne({ userId, postId }).lean();
   return !!like;
 };
 
@@ -99,7 +99,9 @@ export const getPostLikeStatus = async (
   const likes = await LikeModel.find({
     userId,
     postId: { $in: postIds },
-  }).select('postId');
+  })
+    .select('postId')
+    .lean();
 
   return new Set(likes.map((like) => like.postId.toString()));
 };

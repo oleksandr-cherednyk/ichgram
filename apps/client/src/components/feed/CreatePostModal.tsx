@@ -1,6 +1,7 @@
-import EmojiPicker from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 
 import uploadCloudIcon from '../../assets/icons/upload-cloud.svg';
 import { useCreatePost, useEmojiPicker, useProfile } from '../../hooks';
@@ -184,11 +185,13 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                   </button>
                   {showEmojiPicker && (
                     <div className="absolute bottom-8 left-0 z-50">
-                      <EmojiPicker
-                        onEmojiClick={handleEmojiClick}
-                        width={320}
-                        height={400}
-                      />
+                      <Suspense fallback={null}>
+                        <EmojiPicker
+                          onEmojiClick={handleEmojiClick}
+                          width={320}
+                          height={400}
+                        />
+                      </Suspense>
                     </div>
                   )}
                 </div>
@@ -208,7 +211,7 @@ export const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
 
               {createPost.isError && (
                 <p className="mt-2 text-center text-sm text-red-500">
-                  {createPost.error.message}
+                  Failed to create post
                 </p>
               )}
             </div>

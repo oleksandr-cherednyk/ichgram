@@ -132,9 +132,9 @@ const assertParticipant = async (
   userId: string,
   conversationId: string,
 ): Promise<PopulatedConversationDoc> => {
-  const conversation = await ConversationModel.findById(
-    conversationId,
-  ).populate('participantIds', 'username fullName avatarUrl');
+  const conversation = await ConversationModel.findById(conversationId)
+    .populate('participantIds', 'username fullName avatarUrl')
+    .lean();
 
   if (!conversation) {
     throw createApiError(404, 'NOT_FOUND', 'Conversation not found');
@@ -187,7 +187,9 @@ export const findOrCreateConversation = async (
       $all: [new Types.ObjectId(userId), new Types.ObjectId(participantId)],
       $size: 2,
     },
-  }).populate('participantIds', 'username fullName avatarUrl');
+  })
+    .populate('participantIds', 'username fullName avatarUrl')
+    .lean();
 
   if (existing) {
     await ConversationModel.updateOne(
@@ -199,7 +201,8 @@ export const findOrCreateConversation = async (
       conversationId: existing._id,
     })
       .sort({ createdAt: -1, _id: -1 })
-      .populate('senderId', 'username avatarUrl');
+      .populate('senderId', 'username avatarUrl')
+      .lean();
 
     return formatConversation(
       existing as unknown as PopulatedConversationDoc,
@@ -255,7 +258,8 @@ export const getConversations = async (
   const conversations = await ConversationModel.find(query)
     .sort({ lastMessageAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('participantIds', 'username fullName avatarUrl');
+    .populate('participantIds', 'username fullName avatarUrl')
+    .lean();
 
   const hasMore = conversations.length > limit;
   const data = conversations.slice(0, limit);
@@ -305,7 +309,9 @@ export const getConversations = async (
       );
       const messages = await MessageModel.find({
         _id: { $in: messageIds },
-      }).populate('senderId', 'username avatarUrl');
+      })
+        .populate('senderId', 'username avatarUrl')
+        .lean();
 
       for (const msg of messages) {
         lastMessageMap.set(
@@ -373,7 +379,8 @@ export const getMessages = async (
   const messages = await MessageModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('senderId', 'username avatarUrl');
+    .populate('senderId', 'username avatarUrl')
+    .lean();
 
   const hasMore = messages.length > limit;
   const data = messages.slice(0, limit);
@@ -447,10 +454,9 @@ export const sendMessage = async (
 export const getConversationById = async (
   id: string,
 ): Promise<PopulatedConversationDoc | null> => {
-  return ConversationModel.findById(id).populate(
-    'participantIds',
-    'username fullName avatarUrl',
-  ) as Promise<PopulatedConversationDoc | null>;
+  return ConversationModel.findById(id)
+    .populate('participantIds', 'username fullName avatarUrl')
+    .lean() as Promise<PopulatedConversationDoc | null>;
 };
 
 export const markConversationRead = async (
@@ -500,17 +506,17 @@ export const deleteConversation = async (
   const now = new Date();
 
   // Set clearedAt for this user (upsert pattern)
-  await ConversationModel.updateOne(
+  const clearedResult = await ConversationModel.updateOne(
     { _id: conversationId, 'clearedAt.userId': userObjectId },
     { $set: { 'clearedAt.$.date': now } },
-  ).then(async (result) => {
-    if (result.matchedCount === 0) {
-      await ConversationModel.updateOne(
-        { _id: conversationId },
-        { $push: { clearedAt: { userId: userObjectId, date: now } } },
-      );
-    }
-  });
+  );
+
+  if (clearedResult.matchedCount === 0) {
+    await ConversationModel.updateOne(
+      { _id: conversationId },
+      { $push: { clearedAt: { userId: userObjectId, date: now } } },
+    );
+  }
 
   // Hide conversation and reset unread count
   await ConversationModel.updateOne(
@@ -528,7 +534,7 @@ export const deleteConversation = async (
   );
 
   // Check if all participants have cleared — if so, fully delete
-  const updated = await ConversationModel.findById(conversationId);
+  const updated = await ConversationModel.findById(conversationId).lean();
   if (updated) {
     const participantCount = updated.participantIds.length;
     const clearedCount = updated.clearedAt?.length ?? 0;

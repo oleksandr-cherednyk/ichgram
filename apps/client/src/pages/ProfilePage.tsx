@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { LoadingScreen } from '../components/common';
+import { PostDetailModal } from '../components/feed';
 import {
-  PostViewModal,
   ProfileGrid,
   ProfileHeader,
   ProfileSkeleton,
@@ -40,7 +39,11 @@ export const ProfilePage = () => {
   }
 
   if (error || !user) {
-    return <LoadingScreen message="User not found" />;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-zinc-500">User not found</p>
+      </div>
+    );
   }
 
   return (
@@ -66,7 +69,7 @@ export const ProfilePage = () => {
       </section>
 
       {/* Post Modal */}
-      <PostViewModal
+      <PostDetailModal
         postId={selectedPostId}
         onClose={() => setSelectedPostId(null)}
       />

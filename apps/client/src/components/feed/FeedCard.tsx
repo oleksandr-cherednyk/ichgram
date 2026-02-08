@@ -2,6 +2,7 @@ import { Heart, MessageCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { useFollow, useProfile, useUnfollow } from '../../hooks';
 import { formatTimeAgo } from '../../lib/utils';
 import type { HomeFeedPost } from '../../types/post';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
@@ -13,9 +14,23 @@ type FeedCardProps = {
 };
 
 export const FeedCard = ({ post, onOpenPost }: FeedCardProps) => {
+  const { data: currentUser } = useProfile();
+  const follow = useFollow();
+  const unfollow = useUnfollow();
+  const isOwnPost = currentUser?.id === post.author.id;
+  const [isFollowing, setIsFollowing] = useState(true); // feed = followed users
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [isClamped, setIsClamped] = useState(false);
   const captionRef = useRef<HTMLParagraphElement>(null);
+
+  const handleFollowToggle = () => {
+    const username = post.author.username;
+    if (isFollowing) {
+      unfollow.mutate(username, { onSuccess: () => setIsFollowing(false) });
+    } else {
+      follow.mutate(username, { onSuccess: () => setIsFollowing(true) });
+    }
+  };
 
   useEffect(() => {
     const el = captionRef.current;
@@ -50,13 +65,18 @@ export const FeedCard = ({ post, onOpenPost }: FeedCardProps) => {
           <span className="flex-shrink-0 text-xs text-zinc-400">
             {formatTimeAgo(post.createdAt)}
           </span>
-          <span className="text-xs text-[#737373]">•</span>
-          <Link
-            to={`/profile/${post.author.username}`}
-            className="ml-10 flex-shrink-0 text-xs font-semibold text-[#0095F6] hover:text-[#1aa1ff]"
-          >
-            follow
-          </Link>
+          {!isOwnPost && (
+            <>
+              <span className="text-xs text-[#737373]">•</span>
+              <button
+                onClick={handleFollowToggle}
+                disabled={follow.isPending || unfollow.isPending}
+                className="ml-10 flex-shrink-0 text-xs font-semibold text-[#0095F6] hover:text-[#1aa1ff] disabled:opacity-50"
+              >
+                {isFollowing ? 'following' : 'follow'}
+              </button>
+            </>
+          )}
         </div>
       </CardHeader>
 

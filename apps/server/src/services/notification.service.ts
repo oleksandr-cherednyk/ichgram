@@ -64,9 +64,7 @@ type PopulatedNotificationDoc = {
   createdAt: Date;
 };
 
-const unreadFilter = {
-  $or: [{ readAt: { $exists: false } }, { readAt: null }],
-};
+const unreadFilter = { readAt: null };
 
 const formatNotification = (
   notification: PopulatedNotificationDoc,
@@ -153,7 +151,8 @@ export const getNotifications = async (
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
     .populate('actorId', 'username fullName avatarUrl')
-    .populate('postId', 'imageUrl');
+    .populate('postId', 'imageUrl')
+    .lean();
 
   const hasMore = notifications.length > limit;
   const data = notifications.slice(0, limit);

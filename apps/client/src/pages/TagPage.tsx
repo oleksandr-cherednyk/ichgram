@@ -7,7 +7,7 @@ import {
   LoadMoreButton,
   PostGridItem,
 } from '../components/common';
-import { PostViewModal } from '../components/profile';
+import { PostDetailModal } from '../components/feed';
 import { useTagPosts } from '../hooks';
 
 export const TagPage = () => {
@@ -31,7 +31,11 @@ export const TagPage = () => {
   }
 
   if (error) {
-    return <LoadingScreen message="Failed to load posts" />;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-zinc-500">Failed to load posts</p>
+      </div>
+    );
   }
 
   return (
@@ -83,7 +87,7 @@ export const TagPage = () => {
       )}
 
       {/* Post Modal */}
-      <PostViewModal
+      <PostDetailModal
         postId={selectedPostId}
         onClose={() => setSelectedPostId(null)}
       />

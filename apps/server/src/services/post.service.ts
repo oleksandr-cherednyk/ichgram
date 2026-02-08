@@ -1,6 +1,13 @@
 import { Types } from 'mongoose';
 
-import { CommentModel, FollowModel, PostModel } from '../models';
+import {
+  CommentModel,
+  CommentLikeModel,
+  FollowModel,
+  LikeModel,
+  NotificationModel,
+  PostModel,
+} from '../models';
 import {
   createApiError,
   decodeCursor,
@@ -145,10 +152,9 @@ export const getPostById = async (
   postId: string,
   userId?: string,
 ): Promise<PostWithAuthor> => {
-  const post = await PostModel.findById(postId).populate(
-    'authorId',
-    'username avatarUrl',
-  );
+  const post = await PostModel.findById(postId)
+    .populate('authorId', 'username avatarUrl')
+    .lean();
 
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
@@ -174,7 +180,7 @@ export const updatePost = async (
   input: UpdatePostInput,
   newImageUrl?: string,
 ): Promise<PostWithAuthor> => {
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
 
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
@@ -209,14 +215,13 @@ export const updatePost = async (
 
 /**
  * Delete post (only owner can delete)
- * Also deletes associated image file
- * TODO: Cascade delete likes and comments in Phase 5
+ * Cascade deletes likes, comments, comment-likes, notifications, and image file
  */
 export const deletePost = async (
   postId: string,
   userId: string,
 ): Promise<void> => {
-  const post = await PostModel.findById(postId);
+  const post = await PostModel.findById(postId).lean();
 
   if (!post) {
     throw createApiError(404, 'NOT_FOUND', 'Post not found');
@@ -231,13 +236,18 @@ export const deletePost = async (
     );
   }
 
-  // Delete post from database
-  await PostModel.findByIdAndDelete(postId);
+  // Cascade delete associated data
+  const commentIds = await CommentModel.find({ postId }).distinct('_id');
+  await Promise.all([
+    LikeModel.deleteMany({ postId }),
+    CommentLikeModel.deleteMany({ commentId: { $in: commentIds } }),
+    CommentModel.deleteMany({ postId }),
+    NotificationModel.deleteMany({ postId }),
+    PostModel.findByIdAndDelete(postId),
+  ]);
 
   // Delete image file (non-blocking, logs error if fails)
   void deleteFile(post.imageUrl);
-
-  // TODO Phase 5: Delete associated likes and comments (cascade)
 };
 
 // ============================================================================
@@ -256,9 +266,9 @@ export const getFeed = async (
   const limit = parseLimit(limitParam);
 
   // Get IDs of users the current user follows
-  const follows = await FollowModel.find({ followerId: userId }).select(
-    'followingId',
-  );
+  const follows = await FollowModel.find({ followerId: userId })
+    .select('followingId')
+    .lean();
   const followingIds = follows.map((f) => f.followingId);
 
   if (followingIds.length === 0) {
@@ -292,10 +302,9 @@ export const getFeed = async (
 
   // Populate author info
   const postIds = sampled.map((p: { _id: Types.ObjectId }) => p._id);
-  const posts = await PostModel.find({ _id: { $in: postIds } }).populate(
-    'authorId',
-    'username avatarUrl',
-  );
+  const posts = await PostModel.find({ _id: { $in: postIds } })
+    .populate('authorId', 'username avatarUrl')
+    .lean();
 
   // Batch fetch isLiked status
   const likeStatusMap = await getPostLikeStatus(
@@ -315,13 +324,16 @@ export const getFeed = async (
   );
   const comments = await CommentModel.find({
     _id: { $in: commentIds },
-  }).populate('authorId', 'username');
+  })
+    .populate('authorId', 'username')
+    .lean();
 
   const commentMap = new Map<
     string,
     { authorUsername: string; text: string }
   >();
   for (const comment of comments) {
+    if (!comment.authorId) continue;
     const author = comment.authorId as unknown as {
       _id: Types.ObjectId;
       username: string;
@@ -332,16 +344,18 @@ export const getFeed = async (
     });
   }
 
-  // Format response
-  const data: FeedPostItem[] = posts.map((post) => {
-    const formatted = formatPost(post as unknown as PopulatedPostDoc);
-    const postIdStr = post._id.toString();
-    return {
-      ...formatted,
-      isLiked: likeStatusMap.has(postIdStr),
-      lastComment: commentMap.get(postIdStr) ?? null,
-    };
-  });
+  // Format response (filter out posts with deleted authors)
+  const data: FeedPostItem[] = posts
+    .filter((post) => post.authorId != null)
+    .map((post) => {
+      const formatted = formatPost(post as unknown as PopulatedPostDoc);
+      const postIdStr = post._id.toString();
+      return {
+        ...formatted,
+        isLiked: likeStatusMap.has(postIdStr),
+        lastComment: commentMap.get(postIdStr) ?? null,
+      };
+    });
 
   return {
     data,
@@ -373,7 +387,8 @@ export const getExplorePosts = async (
   const posts = await PostModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('authorId', 'username avatarUrl');
+    .populate('authorId', 'username avatarUrl')
+    .lean();
 
   const hasMore = posts.length > limit;
   const data = posts.slice(0, limit);
@@ -388,7 +403,9 @@ export const getExplorePosts = async (
   }
 
   return {
-    data: data.map((post) => formatPost(post as unknown as PopulatedPostDoc)),
+    data: data
+      .filter((post) => post.authorId != null)
+      .map((post) => formatPost(post as unknown as PopulatedPostDoc)),
     nextCursor,
     hasMore,
   };
@@ -401,14 +418,13 @@ export const getExplorePosts = async (
 export const getTopPosts = async (
   limit: number = 10,
 ): Promise<PostWithAuthor[]> => {
-  // Over-fetch to account for posts whose author was deleted
   const posts = await PostModel.find()
     .sort({ likeCount: -1, createdAt: -1 })
-    .limit(limit * 3)
-    .populate('authorId', 'username avatarUrl');
+    .limit(limit)
+    .populate('authorId', 'username avatarUrl')
+    .lean();
 
   return posts
     .filter((post) => post.authorId != null)
-    .slice(0, limit)
     .map((post) => formatPost(post as unknown as PopulatedPostDoc));
 };

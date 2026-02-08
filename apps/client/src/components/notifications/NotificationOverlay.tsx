@@ -10,7 +10,7 @@ import { buildNotificationText, formatTimeAgo } from '../../lib/utils';
 import { useNotificationStore } from '../../stores/notification';
 import { useSearchStore } from '../../stores/search';
 import type { Notification } from '../../types/notification';
-import { PostViewModal } from '../profile';
+import { PostDetailModal } from '../feed';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { Spinner } from '../ui/spinner';
@@ -196,7 +196,7 @@ export const NotificationOverlay = () => {
         </ScrollArea>
       </div>
 
-      <PostViewModal
+      <PostDetailModal
         postId={selectedPostId}
         onClose={() => setSelectedPostId(null)}
       />

@@ -1,19 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef } from 'react';
+import { Camera } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { LoadingScreen } from '../components/common';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { UserAvatar } from '../components/ui/user-avatar';
-import { useProfile, useUpdateAvatar, useUpdateProfile } from '../hooks';
+import {
+  useDeleteAccount,
+  useProfile,
+  useUpdateAvatar,
+  useUpdateProfile,
+} from '../hooks';
 
 const editProfileSchema = z.object({
-  fullName: z.string().min(1, 'Name is required').max(100),
+  fullName: z.string().min(2, 'Name is required').max(80),
   website: z.string().max(200).optional(),
   bio: z.string().max(160, 'Bio must be 160 characters or less'),
 });
@@ -25,7 +41,9 @@ export const EditProfilePage = () => {
   const { data: user, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const updateAvatar = useUpdateAvatar();
+  const deleteAccount = useDeleteAccount();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm<EditProfileValues>({
     resolver: zodResolver(editProfileSchema),
@@ -81,11 +99,14 @@ export const EditProfilePage = () => {
           />
           <Button
             type="button"
-            className="h-8 px-8"
+            className="h-8 px-3 sm:px-8"
             onClick={handleAvatarClick}
             disabled={updateAvatar.isPending}
           >
-            {updateAvatar.isPending ? 'Uploading...' : 'New photo'}
+            <Camera className="size-4 sm:hidden" />
+            <span className="hidden sm:inline">
+              {updateAvatar.isPending ? 'Uploading...' : 'New photo'}
+            </span>
           </Button>
         </div>
 
@@ -152,7 +173,41 @@ export const EditProfilePage = () => {
             </Button>
           </div>
         </form>
+
+        {/* Delete account */}
+        <div className="border-t border-zinc-200 pt-6">
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-red-500 hover:bg-red-50 hover:text-red-600"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            Delete account
+          </Button>
+        </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your account, posts, comments, likes, and conversations will be
+              permanently deleted. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAccount.mutate()}
+              disabled={deleteAccount.isPending}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              {deleteAccount.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

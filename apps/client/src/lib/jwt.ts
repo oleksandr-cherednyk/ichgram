@@ -2,7 +2,7 @@
  * Decode JWT payload without verifying signature.
  * Used client-side to check token expiry.
  */
-export const decodeJwtPayload = (token: string): { exp?: number } | null => {
+const decodeJwtPayload = (token: string): { exp?: number } | null => {
   try {
     const base64Payload = token.split('.')[1];
     const payload = JSON.parse(atob(base64Payload));

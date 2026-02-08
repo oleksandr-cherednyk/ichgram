@@ -12,7 +12,7 @@ const userSchema = new Schema(
     },
     username: { type: String, required: true, unique: true, trim: true },
     fullName: { type: String, required: true, trim: true },
-    passwordHash: { type: String, required: true },
+    passwordHash: { type: String, required: true, select: false },
     avatarUrl: { type: String },
     bio: { type: String, maxlength: 160 },
     website: { type: String, maxlength: 200, trim: true },

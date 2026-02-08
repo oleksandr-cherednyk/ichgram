@@ -1,20 +1,22 @@
 import { LogOut } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import logo from '../../assets/logo/logo.png';
-import { useProfile, useUnreadCount, useUnreadMessageCount } from '../../hooks';
-import { apiRequest } from '../../lib/api';
+import {
+  useLogout,
+  useProfile,
+  useUnreadCount,
+  useUnreadMessageCount,
+} from '../../hooks';
 import { navItems } from '../../lib/navigation';
 import { cn } from '../../lib/utils';
-import { useAuthStore } from '../../stores/auth';
 import { useCreatePostStore } from '../../stores/createPost';
 import { useNotificationStore } from '../../stores/notification';
 import { useSearchStore } from '../../stores/search';
 import { UserAvatar } from '../ui/user-avatar';
 
 export const Sidebar = () => {
-  const navigate = useNavigate();
-  const { clear } = useAuthStore();
+  const handleLogout = useLogout();
   const { data: user } = useProfile();
   const { data: unreadData } = useUnreadCount();
   const { data: unreadMessageData } = useUnreadMessageCount();
@@ -23,12 +25,6 @@ export const Sidebar = () => {
   const openNotifications = useNotificationStore((s) => s.open);
   const unreadCount = unreadData?.count ?? 0;
   const unreadMessageCount = unreadMessageData?.count ?? 0;
-
-  const handleLogout = async () => {
-    await apiRequest('/auth/logout', { method: 'POST' });
-    clear();
-    navigate('/login');
-  };
 
   return (
     <aside className="relative z-40 hidden flex-shrink-0 flex-col border-r border-[#DBDBDB] bg-white px-3 py-6 md:flex md:w-[72px] xl:w-[245px]">

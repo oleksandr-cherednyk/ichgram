@@ -1,6 +1,7 @@
-import EmojiPicker from 'emoji-picker-react';
 import { MessageCircle, MoreHorizontal, Smile } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
+
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 import { Link } from 'react-router-dom';
 
 import {
@@ -228,11 +229,13 @@ export const PostContent = ({
             </Tooltip>
             {showEmojiPicker && (
               <div className="absolute bottom-10 left-0 z-50">
-                <EmojiPicker
-                  onEmojiClick={handleEmojiClick}
-                  width={320}
-                  height={400}
-                />
+                <Suspense fallback={null}>
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiClick}
+                    width={320}
+                    height={400}
+                  />
+                </Suspense>
               </div>
             )}
           </div>

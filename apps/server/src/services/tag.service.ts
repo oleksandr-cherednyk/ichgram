@@ -120,7 +120,8 @@ export const getPostsByTag = async (
   const posts = await PostModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .select('imageUrl likeCount commentCount createdAt');
+    .select('imageUrl likeCount commentCount createdAt')
+    .lean();
 
   // Determine if there are more results
   const hasMore = posts.length > limit;

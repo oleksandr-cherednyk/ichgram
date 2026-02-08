@@ -2,10 +2,8 @@ import { Compass, Heart, LogOut } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
-import { useProfile, useUnreadCount } from '../../hooks';
-import { apiRequest } from '../../lib/api';
+import { useLogout, useProfile, useUnreadCount } from '../../hooks';
 import { cn } from '../../lib/utils';
-import { useAuthStore } from '../../stores/auth';
 import { useMobileMenuStore } from '../../stores/mobileMenu';
 import { useNotificationStore } from '../../stores/notification';
 import { UserAvatar } from '../ui/user-avatar';
@@ -17,7 +15,7 @@ export const MobileMenu = () => {
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.count ?? 0;
   const navigate = useNavigate();
-  const { clear } = useAuthStore();
+  const logout = useLogout();
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,10 +56,8 @@ export const MobileMenu = () => {
   };
 
   const handleLogout = async () => {
-    await apiRequest('/auth/logout', { method: 'POST' });
-    clear();
     close();
-    navigate('/login');
+    await logout();
   };
 
   return (

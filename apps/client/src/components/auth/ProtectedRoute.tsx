@@ -18,19 +18,13 @@ export const ProtectedRoute = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // No token at all - not authenticated
-      if (!accessToken) {
-        setStatus('unauthenticated');
-        return;
-      }
-
       // Token exists and not expired - authenticated
-      if (!isTokenExpired(accessToken)) {
+      if (accessToken && !isTokenExpired(accessToken)) {
         setStatus('authenticated');
         return;
       }
 
-      // Token expired - try to refresh
+      // No token or expired token - try to refresh via cookie
       const newToken = await refreshAccessToken();
 
       if (newToken) {

@@ -19,8 +19,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Image processing config
-const MAX_WIDTH = 1080;
-const MAX_HEIGHT = 1080;
 const JPEG_QUALITY = 85;
 
 // Multer storage: keep file in memory for processing
@@ -35,10 +33,13 @@ const fileFilter = (
   if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     callback(null, true);
   } else {
-    const error = new Error(
-      `Only ${ALLOWED_MIME_TYPES.join(', ')} files are allowed`,
+    callback(
+      createApiError(
+        400,
+        'VALIDATION_ERROR',
+        `Only ${ALLOWED_MIME_TYPES.join(', ')} files are allowed`,
+      ) as unknown as Error,
     );
-    callback(error);
   }
 };
 
@@ -52,123 +53,81 @@ const upload = multer({
 });
 
 /**
- * Middleware to process uploaded image with Sharp
- * Resizes, converts to JPEG, and saves to uploads directory
+ * Generic image processing middleware factory.
+ * Resizes with Sharp, converts to JPEG, saves to the given directory.
  */
-const processImage = async (
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  if (!req.file) {
-    return next(
-      createApiError(400, 'VALIDATION_ERROR', 'Image file is required'),
-    );
-  }
+const createImageProcessor = (config: {
+  ensureDir: () => Promise<void>;
+  outputDir: string;
+  urlPrefix: string;
+  resize: sharp.ResizeOptions;
+}) => {
+  return async (
+    req: Request,
+    _res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    if (!req.file) {
+      return next(
+        createApiError(400, 'VALIDATION_ERROR', 'Image file is required'),
+      );
+    }
 
-  try {
-    // Ensure uploads directory exists
-    await ensureUploadsDirExists();
+    try {
+      await config.ensureDir();
 
-    // Generate unique filename
-    const filename = generateUniqueFilename(req.file.originalname, 'jpg');
-    const filepath = path.join(UPLOADS_DIR, filename);
+      const filename = generateUniqueFilename(req.file.originalname, 'jpg');
+      const filepath = path.join(config.outputDir, filename);
 
-    // Process image with Sharp
-    await sharp(req.file.buffer)
-      .resize(MAX_WIDTH, MAX_HEIGHT, {
-        fit: 'inside', // Maintain aspect ratio
-        withoutEnlargement: true, // Don't upscale small images
-      })
-      .jpeg({ quality: JPEG_QUALITY })
-      .toFile(filepath);
+      await sharp(req.file.buffer)
+        .resize(config.resize)
+        .jpeg({ quality: JPEG_QUALITY })
+        .toFile(filepath);
 
-    // Add URL path (not filesystem path) for database storage
-    req.file.path = `/uploads/posts/${filename}`;
-    req.file.filename = filename;
+      req.file.path = `${config.urlPrefix}/${filename}`;
+      req.file.filename = filename;
 
-    next();
-  } catch (error) {
-    next(
-      createApiError(
-        500,
-        'IMAGE_PROCESSING_ERROR',
-        'Failed to process image',
-        error instanceof Error ? { message: error.message } : undefined,
-      ),
-    );
-  }
+      next();
+    } catch (error) {
+      next(
+        createApiError(
+          500,
+          'IMAGE_PROCESSING_ERROR',
+          'Failed to process image',
+          error instanceof Error ? { message: error.message } : undefined,
+        ),
+      );
+    }
+  };
 };
 
 /**
- * Middleware chain: multer upload + sharp processing
- * Usage: uploadSingle('image') in routes
+ * Middleware chain: multer upload + sharp processing for posts
  */
 export const uploadSingle = (fieldName: string) => [
   upload.single(fieldName),
-  processImage,
+  createImageProcessor({
+    ensureDir: ensureUploadsDirExists,
+    outputDir: UPLOADS_DIR,
+    urlPrefix: '/uploads/posts',
+    resize: {
+      width: 1080,
+      height: 1080,
+      fit: 'inside',
+      withoutEnlargement: true,
+    },
+  }),
 ];
-
-// ============================================================================
-// Avatar Upload
-// ============================================================================
-
-const AVATAR_SIZE = 320; // Square avatar
-
-/**
- * Middleware to process avatar with Sharp
- * Crops to square and resizes to 320x320
- */
-const processAvatar = async (
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  if (!req.file) {
-    return next(
-      createApiError(400, 'VALIDATION_ERROR', 'Image file is required'),
-    );
-  }
-
-  try {
-    // Ensure avatars directory exists
-    await ensureAvatarsDirExists();
-
-    // Generate unique filename
-    const filename = generateUniqueFilename(req.file.originalname, 'jpg');
-    const filepath = path.join(AVATARS_DIR, filename);
-
-    // Process avatar with Sharp - crop to square and resize
-    await sharp(req.file.buffer)
-      .resize(AVATAR_SIZE, AVATAR_SIZE, {
-        fit: 'cover', // Crop to fill square
-        position: 'center',
-      })
-      .jpeg({ quality: JPEG_QUALITY })
-      .toFile(filepath);
-
-    // Add URL path (not filesystem path) for database storage
-    req.file.path = `/uploads/avatars/${filename}`;
-    req.file.filename = filename;
-
-    next();
-  } catch (error) {
-    next(
-      createApiError(
-        500,
-        'IMAGE_PROCESSING_ERROR',
-        'Failed to process avatar',
-        error instanceof Error ? { message: error.message } : undefined,
-      ),
-    );
-  }
-};
 
 /**
  * Middleware chain for avatar upload
- * Usage: uploadAvatar('avatar') in routes
  */
 export const uploadAvatar = (fieldName: string) => [
   upload.single(fieldName),
-  processAvatar,
+  createImageProcessor({
+    ensureDir: ensureAvatarsDirExists,
+    outputDir: AVATARS_DIR,
+    urlPrefix: '/uploads/avatars',
+    resize: { width: 320, height: 320, fit: 'cover', position: 'center' },
+  }),
 ];

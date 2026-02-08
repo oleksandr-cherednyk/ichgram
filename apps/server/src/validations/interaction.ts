@@ -8,6 +8,7 @@ import { objectIdSchema } from './pagination';
 export const commentSchema = z.object({
   text: z
     .string()
+    .trim()
     .min(1, 'Comment cannot be empty')
     .max(500, 'Comment too long'),
 });

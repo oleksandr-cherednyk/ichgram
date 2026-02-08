@@ -35,7 +35,9 @@ export const followUser = async (
   targetUsername: string,
 ): Promise<{ followed: boolean }> => {
   // Find target user
-  const targetUser = await UserModel.findOne({ username: targetUsername });
+  const targetUser = await UserModel.findOne({
+    username: targetUsername,
+  }).lean();
   if (!targetUser) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
@@ -48,7 +50,10 @@ export const followUser = async (
   }
 
   // Check if already following
-  const existing = await FollowModel.findOne({ followerId, followingId });
+  const existing = await FollowModel.findOne({
+    followerId,
+    followingId,
+  }).lean();
   if (existing) {
     return { followed: false }; // Already following
   }
@@ -74,7 +79,9 @@ export const unfollowUser = async (
   targetUsername: string,
 ): Promise<{ unfollowed: boolean }> => {
   // Find target user
-  const targetUser = await UserModel.findOne({ username: targetUsername });
+  const targetUser = await UserModel.findOne({
+    username: targetUsername,
+  }).lean();
   if (!targetUser) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
@@ -94,8 +101,8 @@ export const isFollowing = async (
   followerId: string,
   followingId: string,
 ): Promise<boolean> => {
-  const follow = await FollowModel.findOne({ followerId, followingId });
-  return !!follow;
+  const exists = await FollowModel.exists({ followerId, followingId });
+  return exists !== null;
 };
 
 // ============================================================================
@@ -111,7 +118,7 @@ export const getFollowers = async (
   limitParam?: number | string | null,
 ): Promise<PaginationResult<FollowUser>> => {
   // Find user
-  const user = await UserModel.findOne({ username });
+  const user = await UserModel.findOne({ username }).lean();
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
@@ -135,7 +142,8 @@ export const getFollowers = async (
   const follows = await FollowModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('followerId', 'username fullName avatarUrl');
+    .populate('followerId', 'username fullName avatarUrl')
+    .lean();
 
   // Determine if there are more
   const hasMore = follows.length > limit;
@@ -152,20 +160,22 @@ export const getFollowers = async (
   }
 
   return {
-    data: data.map((follow) => {
-      const follower = follow.followerId as unknown as {
-        _id: { toString(): string };
-        username: string;
-        fullName: string;
-        avatarUrl?: string;
-      };
-      return {
-        id: follower._id.toString(),
-        username: follower.username,
-        fullName: follower.fullName,
-        avatarUrl: follower.avatarUrl ?? null,
-      };
-    }),
+    data: data
+      .filter((follow) => follow.followerId != null)
+      .map((follow) => {
+        const follower = follow.followerId as unknown as {
+          _id: { toString(): string };
+          username: string;
+          fullName: string;
+          avatarUrl?: string;
+        };
+        return {
+          id: follower._id.toString(),
+          username: follower.username,
+          fullName: follower.fullName,
+          avatarUrl: follower.avatarUrl ?? null,
+        };
+      }),
     nextCursor,
     hasMore,
   };
@@ -180,7 +190,7 @@ export const getFollowing = async (
   limitParam?: number | string | null,
 ): Promise<PaginationResult<FollowUser>> => {
   // Find user
-  const user = await UserModel.findOne({ username });
+  const user = await UserModel.findOne({ username }).lean();
   if (!user) {
     throw createApiError(404, 'NOT_FOUND', 'User not found');
   }
@@ -204,7 +214,8 @@ export const getFollowing = async (
   const follows = await FollowModel.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
-    .populate('followingId', 'username fullName avatarUrl');
+    .populate('followingId', 'username fullName avatarUrl')
+    .lean();
 
   // Determine if there are more
   const hasMore = follows.length > limit;
@@ -221,20 +232,22 @@ export const getFollowing = async (
   }
 
   return {
-    data: data.map((follow) => {
-      const following = follow.followingId as unknown as {
-        _id: { toString(): string };
-        username: string;
-        fullName: string;
-        avatarUrl?: string;
-      };
-      return {
-        id: following._id.toString(),
-        username: following.username,
-        fullName: following.fullName,
-        avatarUrl: following.avatarUrl ?? null,
-      };
-    }),
+    data: data
+      .filter((follow) => follow.followingId != null)
+      .map((follow) => {
+        const following = follow.followingId as unknown as {
+          _id: { toString(): string };
+          username: string;
+          fullName: string;
+          avatarUrl?: string;
+        };
+        return {
+          id: following._id.toString(),
+          username: following.username,
+          fullName: following.fullName,
+          avatarUrl: following.avatarUrl ?? null,
+        };
+      }),
     nextCursor,
     hasMore,
   };

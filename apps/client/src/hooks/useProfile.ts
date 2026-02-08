@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { apiRequest, apiUpload } from '../lib/api';
+import { useAuthStore } from '../stores/auth';
 import type { UpdateProfileInput, UserProfile } from '../types/user';
 
 type ProfileResponse = {
@@ -12,10 +13,13 @@ type ProfileResponse = {
  * Hook to get current user's profile
  */
 export const useProfile = () => {
+  const accessToken = useAuthStore((s) => s.accessToken);
+
   return useQuery({
     queryKey: ['profile', 'me'],
     queryFn: () => apiRequest<ProfileResponse>('/users/me'),
     select: (data) => data.user,
+    enabled: !!accessToken,
   });
 };
 
