@@ -4,10 +4,10 @@
 
 - Access token: short-lived JWT returned to client
 - Refresh token: httpOnly cookie, rotated on refresh
-- Cookie flags
-  - Dev: httpOnly, sameSite=lax, secure=false (localhost)
-  - Prod: httpOnly, sameSite=none, secure=true
-- Env vars: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL (default 1h), REFRESH_TOKEN_TTL (default 7d), NODE_ENV
+- Cookie flags (controlled by `COOKIE_SECURE` env var, not NODE_ENV)
+  - COOKIE_SECURE=false: httpOnly, sameSite=lax, secure=false (HTTP / localhost)
+  - COOKIE_SECURE=true: httpOnly, sameSite=none, secure=true (requires HTTPS)
+- Env vars: PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_ORIGIN, ACCESS_TOKEN_TTL (default 1h), REFRESH_TOKEN_TTL (default 7d), COOKIE_SECURE (default false), NODE_ENV
 
 ## Threat-driven checklist
 

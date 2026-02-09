@@ -212,6 +212,7 @@ MONGO_URI=mongodb://localhost:27017/ichgram
 JWT_ACCESS_SECRET=your-access-secret-min-32-chars
 JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
 CLIENT_ORIGIN=http://localhost:5173
+COOKIE_SECURE=false
 ```
 
 ### Install

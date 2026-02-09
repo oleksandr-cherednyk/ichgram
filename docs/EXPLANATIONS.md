@@ -53,6 +53,7 @@
 - `CLIENT_ORIGIN`
 - `ACCESS_TOKEN_TTL` (default 1h)
 - `REFRESH_TOKEN_TTL` (default 7d)
+- `COOKIE_SECURE` (default false) — `true` для HTTPS, `false` для HTTP
 - `NODE_ENV`
 
 Почему так:
@@ -132,8 +133,8 @@
 
 Правила:
 
-- Dev: `httpOnly=true`, `sameSite=lax`, `secure=false`.
-- Prod: `httpOnly=true`, `sameSite=none`, `secure=true`.
+- `COOKIE_SECURE=false`: `httpOnly=true`, `sameSite=lax`, `secure=false`.
+- `COOKIE_SECURE=true`: `httpOnly=true`, `sameSite=none`, `secure=true` (требует HTTPS).
 
 Функции:
 
