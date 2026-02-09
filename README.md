@@ -211,7 +211,7 @@ PORT=4000
 MONGO_URI=mongodb://localhost:27017/ichgram
 JWT_ACCESS_SECRET=your-access-secret-min-32-chars
 JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
-CLIENT_ORIGIN=http://localhost:3000
+CLIENT_ORIGIN=http://localhost:5173
 ```
 
 ### Install
@@ -232,7 +232,7 @@ From the repo root:
 
 ```bash
 pnpm dev          # client + server
-pnpm dev:client   # http://localhost:3000
+pnpm dev:client   # http://localhost:5173
 pnpm dev:server   # http://localhost:4000
 ```
 

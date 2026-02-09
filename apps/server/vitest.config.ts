@@ -10,7 +10,7 @@ export default defineConfig({
       MONGO_URI: 'mongodb://localhost:27017/ichgram_test',
       JWT_ACCESS_SECRET: 'test-access-secret',
       JWT_REFRESH_SECRET: 'test-refresh-secret',
-      CLIENT_ORIGIN: 'http://localhost:3000',
+      CLIENT_ORIGIN: 'http://localhost:5173',
     },
   },
 });
