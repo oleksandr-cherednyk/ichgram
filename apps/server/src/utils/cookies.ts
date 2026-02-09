@@ -5,12 +5,10 @@ import { env } from '../config';
 const REFRESH_COOKIE_NAME = 'refreshToken';
 
 const getRefreshCookieOptions = () => {
-  const isProduction = env.NODE_ENV === 'production';
-
   return {
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax',
-    secure: isProduction,
+    sameSite: env.COOKIE_SECURE ? 'none' : 'lax',
+    secure: env.COOKIE_SECURE,
     path: '/',
   } as const;
 };

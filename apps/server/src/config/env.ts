@@ -13,6 +13,10 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.string().min(1),
   ACCESS_TOKEN_TTL: z.string().default('1h'),
   REFRESH_TOKEN_TTL: z.string().default('7d'),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof envSchema>;
