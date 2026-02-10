@@ -69,7 +69,7 @@ export const SignupPage = () => {
     <section className="flex min-h-screen pt-32 justify-center text-zinc-900 font-['Roboto',sans-serif]">
       <div className="mx-auto flex p-2 flex-col gap-8 max-w-full h-max">
         <div className="w-full pt-2 max-w-md">
-          <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-4 flex flex-col">
+          <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-8 flex flex-col">
             <div className="text-center">
               <img
                 src={logo}
@@ -170,7 +170,7 @@ export const SignupPage = () => {
                     Learn More
                   </a>
                 </p>
-                <p className="text-xs text-center text-[#737373] mt-2 max-w-[288px] mx-auto">
+                <p className="text-xs text-center text-[#737373] mt-[18px] max-w-[288px] mx-auto">
                   By signing up, you agree to our{' '}
                   <a href="#" className="text-[#00376B]">
                     Terms
