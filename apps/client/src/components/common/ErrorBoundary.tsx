@@ -44,12 +44,6 @@ export class ErrorBoundary extends Component<Props, State> {
                 An unexpected error occurred. Please try refreshing the page or
                 go back to the home page.
               </p>
-              <a
-                href="/"
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-[8px] bg-[#0095F6] px-4 text-sm font-semibold text-white transition hover:bg-[#1aa1ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/50"
-              >
-                Go to home
-              </a>
             </div>
           </div>
         </section>
