@@ -27,7 +27,7 @@ export const Sidebar = () => {
   const unreadMessageCount = unreadMessageData?.count ?? 0;
 
   return (
-    <aside className="relative z-40 hidden flex-shrink-0 flex-col border-r border-[#DBDBDB] bg-white px-3 py-6 md:flex md:w-[72px] xl:w-[245px]">
+    <aside className="relative z-40 hidden flex-shrink-0 flex-col border-r border-[#DBDBDB] bg-white px-3 py-6 md:flex md:w-[72px] xl:w-[245px] text-black">
       {/* Logo (hidden when sidebar is collapsed) */}
       <div className="mb-6 hidden px-3 xl:block">
         <NavLink to="/">
@@ -114,7 +114,7 @@ export const Sidebar = () => {
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-4 rounded-lg px-3 py-3 text-base transition-colors hover:bg-zinc-100',
-                    isActive ? 'font-semibold' : 'font-normal',
+                    isActive ? 'font-bold' : 'font-normal',
                   )
                 }
               >
@@ -130,7 +130,7 @@ export const Sidebar = () => {
           className={({ isActive }) =>
             cn(
               'mt-12 flex items-center gap-4 rounded-lg px-3 py-3 text-base transition-colors hover:bg-zinc-100',
-              isActive ? 'font-semibold' : 'font-normal',
+              isActive ? 'font-bold' : 'font-normal',
             )
           }
         >

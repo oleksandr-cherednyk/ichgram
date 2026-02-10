@@ -68,7 +68,7 @@ export const SignupPage = () => {
   };
 
   return (
-    <section className="flex min-h-screen pt-32 justify-center text-zinc-900 font-['Roboto',sans-serif]">
+    <section className="flex min-h-screen pt-32 justify-center text-zinc-900">
       <div className="mx-auto flex p-2 flex-col gap-8 max-w-full h-max">
         <div className="w-full pt-2 max-w-md">
           <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-8 flex flex-col">

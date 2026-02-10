@@ -1,4 +1,4 @@
-import { LinkIcon } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -158,9 +158,9 @@ export const ProfileHeader = ({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#00376B] hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-[600] text-[#00376B] hover:underline"
               >
-                <LinkIcon className="h-3 w-3" />
+                <Link2 className="h-3 w-3 -rotate-45" />
                 {user.website.replace(/^https?:\/\//, '')}
               </a>
             )}

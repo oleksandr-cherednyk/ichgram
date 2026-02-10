@@ -66,7 +66,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <section className="flex min-h-screen pt-32 justify-center text-zinc-900 font-['Roboto',sans-serif]">
+    <section className="flex min-h-screen pt-32 justify-center text-zinc-900">
       <div className="mx-auto flex  p-2 flex-col gap-8 md:flex-row max-w-full h-max">
         <div className="hidden md:block w-[380px]">
           <img
