@@ -102,21 +102,77 @@ const createImageProcessor = (config: {
 };
 
 /**
- * Middleware chain: multer upload + sharp processing for posts
+ * Image processing middleware that skips when no file is present.
+ */
+const createOptionalImageProcessor = (config: {
+  ensureDir: () => Promise<void>;
+  outputDir: string;
+  urlPrefix: string;
+  resize: sharp.ResizeOptions;
+}) => {
+  return async (
+    req: Request,
+    _res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    if (!req.file) {
+      return next();
+    }
+
+    try {
+      await config.ensureDir();
+
+      const filename = generateUniqueFilename(req.file.originalname, 'jpg');
+      const filepath = path.join(config.outputDir, filename);
+
+      await sharp(req.file.buffer)
+        .resize(config.resize)
+        .jpeg({ quality: JPEG_QUALITY })
+        .toFile(filepath);
+
+      req.file.path = `${config.urlPrefix}/${filename}`;
+      req.file.filename = filename;
+
+      next();
+    } catch (error) {
+      next(
+        createApiError(
+          500,
+          'IMAGE_PROCESSING_ERROR',
+          'Failed to process image',
+          error instanceof Error ? { message: error.message } : undefined,
+        ),
+      );
+    }
+  };
+};
+
+const postImageConfig = {
+  ensureDir: ensureUploadsDirExists,
+  outputDir: UPLOADS_DIR,
+  urlPrefix: '/uploads/posts',
+  resize: {
+    width: 1080,
+    height: 1080,
+    fit: 'inside' as const,
+    withoutEnlargement: true,
+  },
+};
+
+/**
+ * Middleware chain: multer upload + sharp processing for posts (image required)
  */
 export const uploadSingle = (fieldName: string) => [
   upload.single(fieldName),
-  createImageProcessor({
-    ensureDir: ensureUploadsDirExists,
-    outputDir: UPLOADS_DIR,
-    urlPrefix: '/uploads/posts',
-    resize: {
-      width: 1080,
-      height: 1080,
-      fit: 'inside',
-      withoutEnlargement: true,
-    },
-  }),
+  createImageProcessor(postImageConfig),
+];
+
+/**
+ * Middleware chain: multer upload + sharp processing for posts (image optional)
+ */
+export const uploadSingleOptional = (fieldName: string) => [
+  upload.single(fieldName),
+  createOptionalImageProcessor(postImageConfig),
 ];
 
 /**

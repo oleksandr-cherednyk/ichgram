@@ -3,7 +3,12 @@ import { Router } from 'express';
 import * as commentController from '../controllers/comment.controller';
 import * as likeController from '../controllers/like.controller';
 import * as postController from '../controllers/post.controller';
-import { requireAuth, uploadSingle, validate } from '../middlewares';
+import {
+  requireAuth,
+  uploadSingle,
+  uploadSingleOptional,
+  validate,
+} from '../middlewares';
 import {
   commentIdParamSchema,
   commentSchema,
@@ -76,7 +81,7 @@ postRouter.get(
  */
 postRouter.patch(
   '/:id',
-  uploadSingle('image'),
+  uploadSingleOptional('image'),
   validate({
     params: postIdParamSchema,
     body: updatePostSchema,
