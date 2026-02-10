@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 
+import { Eye, EyeOff } from 'lucide-react';
 import loginHero from '../../assets/hero/login-hero-2.png';
 import logo from '../../assets/logo/logo.png';
 import { Button } from '../../components/ui/button';
@@ -39,6 +40,7 @@ export const LoginPage = () => {
     },
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
@@ -64,9 +66,9 @@ export const LoginPage = () => {
   };
 
   return (
-    <section className="flex min-h-screen pt-32 justify-center  text-zinc-900">
+    <section className="flex min-h-screen pt-32 justify-center text-zinc-900 font-['Roboto',sans-serif]">
       <div className="mx-auto flex  p-2 flex-col gap-8 md:flex-row max-w-full h-max">
-        <div className="hidden md:block w-full md:w-7/13">
+        <div className="hidden md:block w-[380px]">
           <img
             src={loginHero}
             alt="Phone mockup"
@@ -74,8 +76,8 @@ export const LoginPage = () => {
           />
         </div>
 
-        <div className="w-full md:w-6/13 pt-2 max-w-md">
-          <div className="border border-[#DBDBDB] bg-white px-10 pt-10 pb-8 flex flex-col">
+        <div className="w-[350px] pt-2">
+          <div className="border border-[#DBDBDB] bg-white px-10 pt-[30px] pb-[24px] flex flex-col h-[412px]">
             <div className="text-center">
               <img
                 src={logo}
@@ -119,12 +121,27 @@ export const LoginPage = () => {
                     <FormItem>
                       <FormLabel className="sr-only">Password</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Password"
-                          autoComplete="current-password"
-                          type="password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="Password"
+                            autoComplete="current-password"
+                            type={showPassword ? 'text' : 'password'}
+                            {...field}
+                          />
+                          {field.value && (
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-900"
+                              onClick={() => setShowPassword((v) => !v)}
+                            >
+                              {showPassword ? (
+                                <EyeOff size={18} />
+                              ) : (
+                                <Eye size={18} />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -139,12 +156,12 @@ export const LoginPage = () => {
                 </Button>
               </form>
             </Form>
-            <div className="my-7 flex items-center gap-4 text-xs uppercase text-zinc-400">
+            <div className="mt-[28px] mb-7 flex items-center gap-4 text-xs uppercase text-zinc-400">
               <span className="h-px flex-1 bg-zinc-200" />
               <span className="font-semibold">or</span>
               <span className="h-px flex-1 bg-zinc-200" />
             </div>
-            <div className="text-center mt-14">
+            <div className="text-center mt-auto">
               <Link
                 className="text-sm text-[#00376B] hover:text-zinc-900"
                 to="/reset"

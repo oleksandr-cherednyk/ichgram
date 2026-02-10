@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
+import { Eye, EyeOff } from 'lucide-react';
 import logo from '../../assets/logo/logo.png';
 import { Button } from '../../components/ui/button';
 import {
@@ -41,6 +42,7 @@ export const SignupPage = () => {
     },
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
@@ -152,12 +154,27 @@ export const SignupPage = () => {
                     <FormItem>
                       <FormLabel className="sr-only">Password</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Password"
-                          autoComplete="new-password"
-                          type="password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="Password"
+                            autoComplete="new-password"
+                            type={showPassword ? 'text' : 'password'}
+                            {...field}
+                          />
+                          {field.value && (
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-900"
+                              onClick={() => setShowPassword((v) => !v)}
+                            >
+                              {showPassword ? (
+                                <EyeOff size={18} />
+                              ) : (
+                                <Eye size={18} />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
