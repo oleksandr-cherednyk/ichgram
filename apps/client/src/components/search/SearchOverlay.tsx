@@ -1,10 +1,10 @@
 import { Search, X } from 'lucide-react';
+
 import { useEffect, useRef, useState } from 'react';
 
 import { useSearchTags, useSearchUsers } from '../../hooks';
 import { useNotificationStore } from '../../stores/notification';
 import { useSearchStore } from '../../stores/search';
-import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { SearchResults } from './SearchResults';
 
@@ -95,16 +95,8 @@ export const SearchOverlay = () => {
       className={`absolute left-0 md:left-[72px] top-0 z-30 flex h-full w-full md:w-[400px] flex-col md:rounded-r-2xl border-r border-[#DBDBDB] bg-white transition-transform duration-300 ease-in-out xl:left-[245px] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-6">
+      <div className="px-4 py-6">
         <h2 className="text-2xl font-semibold">Search</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={reset}
-          className="rounded-full p-1"
-        >
-          <X className="h-5 w-5" />
-        </Button>
       </div>
 
       {/* Search input */}
