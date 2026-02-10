@@ -14,7 +14,7 @@ export const buttonVariants = cva(
         ghost: 'bg-transparent text-zinc-600 hover:bg-zinc-100',
       },
       size: {
-        default: 'h-11 px-4',
+        default: 'h-8 px-4',
         sm: 'h-9 px-3',
       },
     },
