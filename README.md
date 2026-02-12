@@ -8,14 +8,14 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 ### Authentication
 
 - Sign up / Log in / Log out
-- JWT access token (1 hour) + httpOnly refresh cookie (7 days)
-- Auto-refresh on 401 with race condition protection (`withAuth` wrapper)
+- JWT access token (1 hour, configurable) + httpOnly refresh cookie (7 days)
+- Auto-refresh on 401 with race condition protection (`apiRequest` wrapper)
 - In-flight query cancellation on logout/session expiry
 - Protected routes with token expiry check
 
 ### Posts
 
-- Home feed page (responsive grid, max 6 latest posts)
+- Home feed page (responsive 2-column grid with cursor pagination)
 - Explore page (3-column grid with tall items spanning 2 rows)
 - Create post (image upload + caption with hashtag extraction)
 - Edit / Delete own post (3-dot actions menu)
@@ -41,8 +41,10 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 
 - Extracted and normalized from captions on the backend
 - Multikey index for fast tag search
-- Tag page with posts by hashtag (`/tags/:tag`)
+- Tag page with posts by hashtag (`/tags/:tag`), multi-tag OR search (`/tags/tag1+tag2`)
+- Tag search input on tag page (space/comma separated)
 - Tag search endpoint with post counts
+- Clickable hashtags in captions
 
 ### Notifications
 
@@ -74,7 +76,7 @@ It features authentication, a posts feed, likes/comments, user profiles, follow 
 
 - Desktop sidebar navigation (245px / collapsible to 72px)
 - Mobile bottom navigation (Home, Search, Create, Messages, Menu)
-- Mobile slide-out menu (Profile, Explore, Notifications, Logout)
+- Mobile slide-out menu with backdrop (Profile, Explore, Tags, Notifications, Logout)
 - All pages adapted for 375px+ screens
 - Post detail modal: full-screen on mobile, centered on desktop
 
@@ -144,7 +146,7 @@ ichgram/
 ### State management
 
 - **Server-state (API data):** TanStack Query — caching, pagination, invalidation, optimistic updates
-- **UI state (overlays/modals):** Zustand — auth token, search/notification/create-post/mobile-menu overlays, chat active conversation
+- **UI state (overlays/modals):** Zustand — search/notification/create-post/mobile-menu overlays, chat active conversation
 - **Cache helpers:** Shared `updatePostInFeedCache`/`updatePostCache` for DRY cache mutations across hooks
 
 ### Real-time chat
@@ -162,7 +164,7 @@ User, Post, Comment, Like, CommentLike, Follow, Notification, Conversation, Mess
 ## Security Decisions
 
 - Refresh token stored in **httpOnly cookie** (prevents JS token theft via XSS)
-- Short-lived access token (1 hour)
+- Short-lived access token (1 hour, configurable via `ACCESS_TOKEN_TTL`)
 - Strict CORS policy (`origin = CLIENT_ORIGIN`, `credentials = true`)
 - Validation with Zod on all API inputs
 - File upload restrictions (size/type whitelist) + sharp processing

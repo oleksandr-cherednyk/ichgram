@@ -1,3 +1,4 @@
+export * from './CaptionText';
 export * from './ErrorBoundary';
 export * from './LoadingScreen';
 export * from './LoadMoreButton';

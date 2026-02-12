@@ -1,7 +1,7 @@
 /**
  * Post author info (embedded in feed posts)
  */
-export type PostAuthor = {
+type PostAuthor = {
   id: string;
   username: string;
   avatarUrl: string | null;
@@ -25,7 +25,7 @@ export type FeedPost = {
 /**
  * Comment author info
  */
-export type CommentAuthor = {
+type CommentAuthor = {
   id: string;
   username: string;
   avatarUrl: string | null;

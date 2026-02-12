@@ -154,14 +154,14 @@
 Файлы: `apps/server/src/services/*.ts`
 
 - `auth.service.ts` — registerUser, loginUser, refreshSession
-- `post.service.ts` — createPost, getPost, updatePost, deletePost, getFeed, getExplorePosts
+- `post.service.ts` — createPost, getPostById, updatePost, deletePost, getFeed, getExplorePosts, getTopPosts
 - `like.service.ts` — likePost, unlikePost
 - `comment.service.ts` — createComment, deleteComment, getComments, likeComment, unlikeComment
 - `follow.service.ts` — followUser, unfollowUser, getFollowers, getFollowing (внутренний хелпер getFollowList)
-- `user.service.ts` — findByEmail, findByUsername, updateProfile, searchUsers
-- `chat.service.ts` — findOrCreateConversation, getConversations, sendMessage, broadcastNewMessage
+- `user.service.ts` — getCurrentUser, getUserByUsername, updateProfile, updateAvatar, getUserPosts, searchUsers, deleteAccount
+- `chat.service.ts` — findOrCreateConversation, getConversations, getMessages, sendMessage, markConversationRead, getTotalUnreadCount, deleteConversation, broadcastNewMessage
 - `tag.service.ts` — searchTags, getPostsByTag
-- `notification.service.ts` — createNotification, getNotifications, markAsRead
+- `notification.service.ts` — createNotification, getNotifications, markAsRead, clearAll, getUnreadCount
 
 ## 11) Модели данных (9 моделей)
 
@@ -225,7 +225,7 @@
 - `/me` — ProfilePage (собственный профиль, без параметра username)
 - `/me/edit` — EditProfilePage (редактирование профиля)
 - `/messages` — MessagesPage (чат)
-- `/tags/:tag` — TagPage (посты по тегу)
+- `/tags/:tag?` — TagPage (посты по тегу; без параметра — страница поиска тегов)
 - `*` — NotFoundPage (404)
 
 Оверлеи (доступны на любой странице):
@@ -271,6 +271,6 @@ TanStack Query — кэширование всех API-данных:
 
 - Desktop (1280px+): боковой Sidebar с навигацией
 - Mobile (<768px): нижняя панель навигации (Home, Search, Create, Messages, Menu)
-- Mobile menu: выдвижная панель с Profile, Explore, Notifications, Logout
+- Mobile menu: выдвижная панель с Profile, Explore, Tags, Notifications, Logout + затемнение фона (backdrop)
 - Все страницы адаптированы для 375px+
 - Post detail modal: полноэкранный на мобильном, центрированный на десктопе

@@ -91,23 +91,24 @@ export const getPostsByTag = async (
   cursorParam?: string | null,
   limitParam?: number | string | null,
 ): Promise<PaginationResult<TagPostItem> & { totalCount: number }> => {
-  // Normalize tag (lowercase, remove # if present)
-  const normalizedTag = tag.toLowerCase().replace(/^#/, '');
+  // Normalize tags (lowercase, remove # if present, split by + for multi-tag OR)
+  const tags = tag
+    .split('+')
+    .map((t) => t.toLowerCase().replace(/^#/, '').trim())
+    .filter(Boolean);
+
+  const tagFilter = tags.length === 1 ? tags[0] : { $in: tags };
 
   const limit = parseLimit(limitParam);
   const cursor = decodeCursor(cursorParam);
 
   // Get total count for header display
   const totalCount = await PostModel.countDocuments({
-    hashtags: normalizedTag,
+    hashtags: tagFilter,
   });
 
   // Build query
-  const query: {
-    hashtags: string;
-    createdAt?: { $lt: Date };
-    _id?: { $ne: string };
-  } = { hashtags: normalizedTag };
+  const query: Record<string, unknown> = { hashtags: tagFilter };
 
   if (cursor) {
     query.createdAt = { $lt: new Date(cursor.createdAt) };

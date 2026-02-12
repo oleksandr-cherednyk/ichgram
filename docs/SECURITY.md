@@ -17,7 +17,7 @@
 - Unauthorized access: enforce ownership checks on posts/comments/notifications
 - File upload abuse: size/type whitelist, sharp processing, strip metadata
 - Session cleanup: `cancelQueries()` before `clear()` on logout/auth failure to prevent in-flight request races
-- Cascade deletion: post delete removes associated likes, comments, comment-likes, notifications
+- Cascade deletion: post delete removes associated likes, comments, comment-likes, notifications; user account delete cascades posts and all derived data
 
 ## Security controls by feature
 

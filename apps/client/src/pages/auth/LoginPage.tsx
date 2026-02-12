@@ -1,9 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
 
 import { Eye, EyeOff } from 'lucide-react';
 import loginHero from '../../assets/hero/login-hero-2.png';

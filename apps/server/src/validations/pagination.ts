@@ -12,3 +12,5 @@ export const paginationQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().positive().max(50).optional(),
 });
+
+export type PaginationQuery = z.infer<typeof paginationQuerySchema>;

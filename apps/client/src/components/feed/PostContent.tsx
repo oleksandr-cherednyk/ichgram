@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useFollow, useProfile, useUnfollow, useUser } from '../../hooks';
 import { formatTimeAgo } from '../../lib/utils';
 import type { FeedPost } from '../../types/post';
+import { CaptionText } from '../common/CaptionText';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -138,7 +139,7 @@ export const PostContent = ({
                     >
                       {post.author.username}
                     </Link>
-                    {post.caption}
+                    <CaptionText text={post.caption} />
                   </p>
                   <p className="mt-1 text-xs text-zinc-400">
                     {formatTimeAgo(post.createdAt)}

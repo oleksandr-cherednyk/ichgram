@@ -29,7 +29,7 @@ export const App = () => (
       <Route element={<AppShell />}>
         <Route path="/" element={<FeedPage />} />
         <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/tags/:tag" element={<TagPage />} />
+        <Route path="/tags/:tag?" element={<TagPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/me" element={<ProfilePage />} />
         <Route path="/me/edit" element={<EditProfilePage />} />

@@ -14,11 +14,11 @@ type PostGridItemProps = {
 export const PostGridItem = ({
   post,
   onClick,
-  className,
+  className = 'aspect-square',
 }: PostGridItemProps) => (
   <button
     onClick={() => onClick?.(post.id)}
-    className={`group relative overflow-hidden bg-zinc-100 ${className ?? 'aspect-square'}`}
+    className={`group relative overflow-hidden bg-zinc-100 ${className}`}
   >
     <img src={post.imageUrl} alt="" className="h-full w-full object-cover" />
     <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">

@@ -1,6 +1,6 @@
 import { Hash } from 'lucide-react';
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { type FormEvent, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import {
   LoadingScreen,
@@ -12,7 +12,25 @@ import { useTagPosts } from '../hooks';
 
 export const TagPage = () => {
   const { tag } = useParams<{ tag: string }>();
+  const navigate = useNavigate();
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState('');
+
+  const tags = (tag ?? '').split('+').filter(Boolean);
+
+  const handleTagSearch = (e: FormEvent) => {
+    e.preventDefault();
+    const parsed = tagInput
+      .split(/[\s,]+/)
+      .map((t) => t.replace(/^#/, '').toLowerCase().trim())
+      .filter(Boolean);
+    if (parsed.length) {
+      navigate(`/tags/${parsed.join('+')}`);
+      setTagInput('');
+    }
+  };
+
+  const hasTag = tags.length > 0;
 
   const {
     data: postsData,
@@ -26,11 +44,11 @@ export const TagPage = () => {
   const posts = postsData?.pages.flatMap((page) => page.data) ?? [];
   const totalCount = postsData?.pages[0]?.totalCount ?? 0;
 
-  if (isLoading) {
+  if (hasTag && isLoading) {
     return <LoadingScreen />;
   }
 
-  if (error) {
+  if (hasTag && error) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-zinc-500">Failed to load posts</p>
@@ -41,27 +59,60 @@ export const TagPage = () => {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Header */}
-      <header className="mb-8 flex items-center gap-6">
-        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full border-2 border-zinc-200 bg-zinc-50 md:h-36 md:w-36">
-          <Hash className="h-8 w-8 text-zinc-600 md:h-12 md:w-12" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold md:text-3xl">#{tag}</h1>
-          <p className="mt-1 text-zinc-500">
-            {totalCount.toLocaleString()} {totalCount === 1 ? 'post' : 'posts'}
-          </p>
+      <header className="mb-4">
+        <h1 className="min-h-[2rem] text-2xl font-bold md:min-h-[2.25rem] md:text-3xl">
+          {hasTag ? tags.map((t) => `#${t}`).join(' ') : '\u00A0'}
+        </h1>
+
+        <div className="mt-4 flex items-end justify-between">
+          <form onSubmit={handleTagSearch}>
+            <label
+              htmlFor="tag-search"
+              className="mb-1 block text-sm font-medium text-zinc-700"
+            >
+              Search by tag
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="tag-search"
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="#nature #photo"
+                className="w-full max-w-xs rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-400"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-[#0095F6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1aa1ff] disabled:opacity-50"
+                disabled={!tagInput.trim()}
+              >
+                Search
+              </button>
+            </div>
+          </form>
+          {hasTag && (
+            <span className="text-sm text-zinc-500">
+              {totalCount.toLocaleString()}{' '}
+              {totalCount === 1 ? 'post' : 'posts'}
+            </span>
+          )}
         </div>
       </header>
 
-      {/* Divider */}
-      <div className="border-t border-[#DBDBDB]" />
-
       {/* Posts Grid */}
-      {posts.length === 0 ? (
+      {!hasTag ? (
+        <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
+          <Hash className="mb-4 h-12 w-12" />
+          <p className="text-lg font-semibold">Search for tags</p>
+          <p className="text-sm">Enter one or more hashtags above</p>
+        </div>
+      ) : posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
           <Hash className="mb-4 h-12 w-12" />
           <p className="text-lg font-semibold">No posts yet</p>
-          <p className="text-sm">Be the first to use #{tag}</p>
+          <p className="text-sm">
+            Be the first to use {tags.map((t) => `#${t}`).join(' ')}
+          </p>
         </div>
       ) : (
         <>

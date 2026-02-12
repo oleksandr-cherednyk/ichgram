@@ -14,7 +14,7 @@ export const tagSearchQuerySchema = z.object({
  * Validation for tag param (in URL path)
  */
 export const tagParamSchema = z.object({
-  tag: z.string().min(1).max(100),
+  tag: z.string().min(1).max(200),
 });
 
 /**

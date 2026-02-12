@@ -1,5 +1,6 @@
 import {
   Compass,
+  Hash,
   Heart,
   Home,
   Menu,
@@ -34,6 +35,12 @@ export const navItems: NavItem[] = [
     to: '/explore',
     label: 'Explore',
     icon: <Compass className="h-6 w-6" />,
+    showOnMobile: false,
+  },
+  {
+    to: '/tags',
+    label: 'Tags',
+    icon: <Hash className="h-6 w-6" />,
     showOnMobile: false,
   },
   {

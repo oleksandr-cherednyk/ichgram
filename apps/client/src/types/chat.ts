@@ -1,11 +1,11 @@
-export type ConversationParticipant = {
+type ConversationParticipant = {
   id: string;
   username: string;
   fullName: string;
   avatarUrl: string | null;
 };
 
-export type MessageSender = {
+type MessageSender = {
   id: string;
   username: string;
   avatarUrl: string | null;
@@ -20,7 +20,7 @@ export type Message = {
   createdAt: string;
 };
 
-export type LastMessagePreview = {
+type LastMessagePreview = {
   id: string;
   text: string;
   senderId: string;

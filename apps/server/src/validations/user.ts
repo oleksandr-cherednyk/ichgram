@@ -6,9 +6,9 @@ import { paginationQuerySchema } from './pagination';
  * Validation for updating user profile
  */
 export const updateProfileSchema = z.object({
-  fullName: z.string().min(1).max(100).optional(),
-  bio: z.string().max(160).optional(),
-  website: z.string().max(200).optional(),
+  fullName: z.string().trim().min(2).max(80).optional(),
+  bio: z.string().trim().max(160).optional(),
+  website: z.string().trim().max(200).optional(),
 });
 
 /**

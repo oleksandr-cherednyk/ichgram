@@ -5,13 +5,9 @@ import { getIO } from '../sockets';
 import type {
   ConversationIdParam,
   CreateConversationBody,
+  PaginationQuery,
   SendMessageBody,
 } from '../validations';
-
-type PaginationQuery = {
-  cursor?: string;
-  limit?: number;
-};
 
 /**
  * POST /conversations

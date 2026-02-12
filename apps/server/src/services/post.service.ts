@@ -420,11 +420,12 @@ export const getTopPosts = async (
 ): Promise<PostWithAuthor[]> => {
   const posts = await PostModel.find()
     .sort({ likeCount: -1, createdAt: -1 })
-    .limit(limit)
+    .limit(limit + 5)
     .populate('authorId', 'username avatarUrl')
     .lean();
 
   return posts
     .filter((post) => post.authorId != null)
+    .slice(0, limit)
     .map((post) => formatPost(post as unknown as PopulatedPostDoc));
 };

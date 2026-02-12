@@ -1,11 +1,11 @@
-export type NotificationActor = {
+type NotificationActor = {
   id: string;
   username: string;
   fullName: string;
   avatarUrl: string | null;
 };
 
-export type NotificationPost = {
+type NotificationPost = {
   id: string;
   imageUrl: string | null;
 };

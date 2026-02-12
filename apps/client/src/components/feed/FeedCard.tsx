@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useFollow, useProfile, useUnfollow } from '../../hooks';
 import { formatTimeAgo } from '../../lib/utils';
 import type { HomeFeedPost } from '../../types/post';
+import { CaptionText } from '../common/CaptionText';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { UserAvatar } from '../ui/user-avatar';
 
@@ -126,7 +127,7 @@ export const FeedCard = ({ post, onOpenPost }: FeedCardProps) => {
               className={captionExpanded ? '' : 'line-clamp-1'}
             >
               <span className="font-semibold">{post.author.username}</span>{' '}
-              {post.caption}
+              <CaptionText text={post.caption} />
             </p>
             {!captionExpanded && isClamped && (
               <button

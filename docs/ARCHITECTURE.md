@@ -17,7 +17,7 @@
 ├── components/
 │   ├── auth/          # ProtectedRoute
 │   ├── chat/          # ChatView, ChatHeader, ChatInput, ConversationList, MessageBubble
-│   ├── common/        # ErrorBoundary, LoadingScreen, LoadMoreButton, PostGridItem
+│   ├── common/        # CaptionText, ErrorBoundary, LoadingScreen, LoadMoreButton, PostGridItem
 │   ├── feed/          # FeedCard, PostContent, PostDetailModal, CreatePostModal, EditPostModal,
 │   │                  #   PostActionsModal, CommentsSection, CommentInput, LikeButton, PostFormSidebar, PostCardSkeleton
 │   ├── layout/        # Sidebar, MobileNav, MobileMenu, Footer
@@ -77,7 +77,7 @@ Protected routes (sidebar via AppShell, guarded by ProtectedRoute):
 - `/me` -- ProfilePage (own profile, no username param)
 - `/me/edit` -- EditProfilePage
 - `/messages` -- MessagesPage
-- `/tags/:tag` -- TagPage
+- `/tags/:tag?` -- TagPage (optional param; `/tags` shows search-only view)
 - `*` -- NotFoundPage
 
 Modal overlays (available on any protected page via AppShell):
@@ -108,7 +108,7 @@ UI state -- Zustand stores (`stores/`):
 
 - Domain UI: `components/<domain>/` (feed, profile, chat, search, notifications, layout)
 - Shared UI primitives: `components/ui/` (shadcn/ui -- Button, Input, Dialog, Card, Avatar, etc.)
-- Common utilities: `components/common/` (ErrorBoundary, LoadingScreen, LoadMoreButton, PostGridItem)
+- Common utilities: `components/common/` (CaptionText, ErrorBoundary, LoadingScreen, LoadMoreButton, PostGridItem)
 - Auth guard: `components/auth/` (ProtectedRoute)
 - Page-level composition: `pages/`
 - Layout shells: `layouts/` (AppShell wraps sidebar + overlays; AuthLayout wraps auth forms)

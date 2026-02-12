@@ -137,7 +137,7 @@ Notification shape:
 ## Tags
 
 - GET `/tags/search?q=...` -- Search tags (public)
-- GET `/tags/:tag/posts` -- Posts by hashtag, paginated (public)
+- GET `/tags/:tag/posts` -- Posts by hashtag, paginated (public). Supports multi-tag OR: `/tags/travel+photography/posts`
 
 Tag response:
 
