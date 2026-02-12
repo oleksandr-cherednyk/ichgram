@@ -39,7 +39,7 @@ export const SearchResults = ({
       {users.length > 0 && (
         <div>
           <div className="px-4 py-2 text-sm font-semibold text-zinc-500">
-            Recent
+            Users
           </div>
           {users.map((user) => (
             <Link
